@@ -1770,7 +1770,7 @@ class Cmdline:
     def restart(cls, cs, parser):
         parser.add_argument(
             "services",
-            nargs='+',
+            nargs='*',
             help="services to restart"
         )
 
@@ -1827,7 +1827,7 @@ class Cmdline:
     def start(cls, cs, parser):
         parser.add_argument(
             "services",
-            nargs='+',
+            nargs='*',
             help="Starts existing containers for a service."
         )
 

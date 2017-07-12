@@ -1,6 +1,6 @@
 version: "2"
 hosts:
-  as: localhost:4243
+  as: 10.1.10.48:4243
 
 project: k2-compose-test
 
@@ -17,7 +17,7 @@ services:
     image: busybox:latest
     host: as
     health_check:
-      shell: echo "ok." && exit 0
+      shell: echo "err." && exit 1
       timeout: 10
     entrypoint: ["ping", "localhost"]
     s_depends_on:
