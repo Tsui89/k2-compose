@@ -6,7 +6,7 @@ import setuptools
 # import version
 
 setup(name="k2-compose",
-      version='0.0.4',
+      version='0.0.4-rc1',
       packages=[
           '',
           'health_agent',

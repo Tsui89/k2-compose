@@ -8,16 +8,17 @@ services:
 
   busybox1:
     image: busybox:latest
-    host: as
     health_check:
-      shell: ./checkers/demo_checker.sh
+      shell: echo "ok." && exit 0
       timeout: 10
+    entrypoint: ["ping", "localhost"]
 
   busybox2:
     image: busybox:latest
     host: as
     health_check:
-      shell: ./checkers/demo_checker.sh
+      shell: echo "ok." && exit 0
       timeout: 10
+    entrypoint: ["ping", "localhost"]
     s_depends_on:
       - busybox1

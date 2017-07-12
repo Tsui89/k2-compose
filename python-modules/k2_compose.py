@@ -668,7 +668,9 @@ class ComposeFile(object):
     @cached_property
     def hosts(self):
         try:
-            return self.stream.get('hosts',{'local':'127.0.0.1:4243'})
+            data =  self.stream.get('hosts',{})
+            data.update({'local':'127.0.0.1:4243'})
+            return data
         except KeyError:
             return {}
 
