@@ -24,7 +24,7 @@ setup(name="k2-compose",
       description='K2Platform deployment tool',
       author='hippopo',
       author_email='wch.c@qq.com',
-      url='https://tsui89.github.io',
+      url='https://github.com/Tsui89/k2-compose',
       install_requires=[
           'colorama>=0.3.7',
           'docker-compose==1.7.1',
