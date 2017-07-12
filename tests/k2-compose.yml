@@ -1,6 +1,6 @@
 version: "2"
 hosts:
-  as: 10.1.10.48:4243
+  as: localhost:4243
 
 project: k2-compose-test
 
