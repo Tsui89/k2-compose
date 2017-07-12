@@ -1,0 +1,9 @@
+version: "2"
+
+services:
+  busybox1:
+    image: busybox:latest
+    entrypoint: ["tail", "-f","/dev/null"]
+  busybox2:
+    image: busybox:latest
+    entrypoint: ["tail", "-f","/dev/null"]

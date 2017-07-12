@@ -1,0 +1,6 @@
+services:
+  busybox1:
+    image: busybox
+  busybox2:
+    image: busybox
+version: 2

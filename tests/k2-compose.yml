@@ -1,0 +1,23 @@
+version: "2"
+hosts:
+  as: localhost:4243
+
+project: k2-compose-test
+
+services:
+
+  busybox1:
+    image: busybox:latest
+    host: as
+    health_check:
+      shell: ./checkers/demo_checker.sh
+      timeout: 10
+
+  busybox2:
+    image: busybox:latest
+    host: as
+    health_check:
+      shell: ./checkers/demo_checker.sh
+      timeout: 10
+    s_depends_on:
+      - busybox1
