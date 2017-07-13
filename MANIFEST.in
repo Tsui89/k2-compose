@@ -1,4 +1,3 @@
 include README.rst
 include PKG-INFO
-recursive-include checkers *.sh
-recursive-include tests *.yaml *.yml
+recursive-include tests *.yml

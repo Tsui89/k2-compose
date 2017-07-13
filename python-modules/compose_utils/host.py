@@ -5,12 +5,7 @@ import logging
 from basenode import Node
 from docker import Client
 import socket
-
-
-[HOST_DISCONNECT, HOST_CONNECT] = [i for i in range(2)]
-HOST_STATUS = ['stopped', 'running']
-COLOR_HOST = ['autobgred', 'autobggreen']
-
+from common.common import HOST_CONNECT, HOST_DISCONNECT, HOST_STATUS,COLOR_HOST
 socket.setdefaulttimeout(3)
 
 
@@ -52,4 +47,4 @@ class Host(Node):
         self.color = COLOR_HOST[self.status_code]
         self.metadata['dockerHost'] = dockerhost
 
-        self.client = Client(self.metadata['dockerHost'],version='1.23')
+        self.client = Client(self.metadata['dockerHost'],timeout=10,version='1.23')

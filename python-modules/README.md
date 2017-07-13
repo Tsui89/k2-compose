@@ -2,6 +2,6 @@
 # Install
 ```
 sudo apt-get install -y python-pip
-sudo sh local_install.sh
+pip install k2-compose
 k2-compose -h
 ```
