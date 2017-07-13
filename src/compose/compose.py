@@ -44,6 +44,8 @@ class ComposeFile(object):
         self._safe_load(**kwargs)
 
         self.project= filter(str.isalnum, self.get_project())
+        self.docker_compose_file = '.%s-compose.yml' % (self.project)
+
         self.sorted_services = self.sort()
 
     def _safe_load(self, filename=None, url=None):
@@ -69,8 +71,7 @@ class ComposeFile(object):
 
     def get_project(self):
         try:
-            project = self.stream.get('project', os.path.basename(os.path.dirname(self.stream_name)))
-            print project
+            project = self.stream.get('project', os.path.basename(os.path.dirname(os.path.realpath(self.stream_name))))
             return project
         except:
             return DOCKER_PROJECT_PREFIX
@@ -235,8 +236,6 @@ class ComposeConcrete(ComposeFile):
             sys.exit(-1)
 
     def generate_yml(self):
-        global DOCKER_COMPOSE_FILE
-        DOCKER_COMPOSE_FILE = '.%s-compose.yml' % (DOCKER_PROJECT_PREFIX)
         parse_key = [DEPENDS_KEY, HEALTH_CHECK_KEY, HOST_KEY, URLS_KEY]
         stream_tmp = copy.deepcopy(self.stream)
 
@@ -261,7 +260,7 @@ class ComposeConcrete(ComposeFile):
 
             # extra_hosts = service.get('extra_hosts',{})
             # extra_hosts.update(_extra_hosts)
-        yaml.safe_dump(stream_tmp, open(DOCKER_COMPOSE_FILE, 'w+'), default_flow_style=False, width=float("inf"))
+        yaml.safe_dump(stream_tmp, open(self.docker_compose_file, 'w+'), default_flow_style=False, width=float("inf"))
 
 
     def build_host(self, id='default'):
@@ -276,7 +275,8 @@ class ComposeConcrete(ComposeFile):
         hostip = self.get_host_ip_by_hostname(service.hostname)
         
         try:
-            container = Container(id=id, service=self.get_service(id), hostip=hostip)
+            container = Container(id=id, service=self.get_service(id), hostip=hostip, project = self.project,
+                                  docker_compose_file = self.docker_compose_file)
         except KeyError:
             return None
         else:

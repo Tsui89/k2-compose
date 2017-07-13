@@ -65,7 +65,7 @@ def subprocesscmd(cmd_str='', timeout=None, discription='', env=os.environ, show
 
 
 class Container(ComposeService):
-    def __init__(self, id='', service=None, hostip='',project=DOCKER_PROJECT_PREFIX):
+    def __init__(self, id='', service=None, hostip='',project=DOCKER_PROJECT_PREFIX, docker_compose_file=DOCKER_COMPOSE_FILE):
         ComposeService.__init__(self, id=id, service=service)
         self._hostip = hostip
         self._client = None
@@ -73,11 +73,12 @@ class Container(ComposeService):
         self._image_status = 'unchanged'
         # self._inspect_image=
         self.project = project
+        self.docker_compose_file = docker_compose_file
         self.containerid = self.project + '_' + self.id + \
                            DOCKER_PROJECT_SUFFIX
 
         self.base_cmd = 'docker-compose -f %s -p %s ' % (
-            DOCKER_COMPOSE_FILE, self.project)
+            self.docker_compose_file, self.project)
 
     @property
     def client(self):
@@ -223,7 +224,7 @@ class Container(ComposeService):
                 SYS_RETURN_CODE = 170
                 return
         cmd = 'docker-compose -f %s -p %s up %s %s' % (
-            DOCKER_COMPOSE_FILE, self.project, parameter,
+            self.docker_compose_file, self.project, parameter,
             self.id)
         subprocesscmd(cmd, env={'DOCKER_HOST': self.hostip})
         pass
@@ -268,7 +269,7 @@ class Container(ComposeService):
                               self.id, self.status))
             return
         cmd = 'docker-compose -f %s -p %s logs %s %s' % (
-            DOCKER_COMPOSE_FILE, self.project, parameter, self.id)
+            self.docker_compose_file, self.project, parameter, self.id)
         subprocesscmd(cmd, env={'DOCKER_HOST': self.hostip})
 
     def stop(self):

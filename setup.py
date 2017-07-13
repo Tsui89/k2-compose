@@ -1,34 +1,38 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from distutils.core import setup
-import setuptools
+# from distutils.core import setup
+from setuptools import setup,find_packages
+# import setuptools
 # import version
-
 setup(name="k2-compose",
-      version='0.0.5',
-      packages=[
-          '',
-          'health_agent',
-          'k2cutils',
-          'compose_utils',
-          'common',
-          'compose',
-          'container',
-          'image',
-          'service',
-      ],
-      package_dir={
-          '': 'python-modules',
-          'health_agent': 'python-modules/health_agent',
-          'k2cutils': 'python-modules/k2cutils',
-          'compose_utils': 'python-modules/compose_utils',
-          'common': 'python-modules/common',
-          'compose': 'python-modules/compose',
-          'container': 'python-modules/container',
-          'image': 'python-modules/image',
-          'service': 'python-modules/service'
+      version='0.0.6',
+      packages=find_packages('src'),
+      package_dir = {
+        '':'src'
       },
+      # packages=[
+      #     '',
+      #     'health_agent',
+      #     'k2cutils',
+      #     'compose_utils',
+      #     'common',
+      #     'compose',
+      #     'container',
+      #     'image',
+      #     'service',
+      # ],
+      # package_dir={
+      #     '': 'python-modules',
+      #     'health_agent': 'python-modules/health_agent',
+      #     'k2cutils': 'python-modules/k2cutils',
+      #     'compose_utils': 'python-modules/compose_utils',
+      #     'common': 'python-modules/common',
+      #     'compose': 'python-modules/compose',
+      #     'container': 'python-modules/container',
+      #     'image': 'python-modules/image',
+      #     'service': 'python-modules/service'
+      # },
       # include_package_data=True,
       # data_files=[('checkers',['*.sh'])],
       description='K2Platform deployment tool',
@@ -46,7 +50,7 @@ setup(name="k2-compose",
       ],
       entry_points={                                                             
           'console_scripts': [
-            'k2-compose=k2_compose:run',
+            'k2-compose=k2compose.k2_compose:run',
           ]
       }
       )
