@@ -71,10 +71,6 @@ def status_store(args):
     sys.exit(SYS_RETURN_CODE)
 
 
-
-
-
-
 class K2ComposeCMD(object):
     def __init__(self, compose_concrete_instance):
         self.composeconcrete = compose_concrete_instance
@@ -166,6 +162,9 @@ class K2ComposeCMD(object):
         if outfile:
             json.dump(deployment, open(outfile, 'w'), indent=2)
         return deployment
+
+    def agent(self, **kwargs):
+        self.composeconcrete.agent(**kwargs)
 
 
 class K2Platform:
@@ -268,7 +267,18 @@ class K2Platform:
         k2compose = K2ComposeCMD(ComposeConcrete(filename=args.file, url=args.url))
         k2compose.save(suffix=args.suffix, services=args.services, only_tag=args.only_tag, only_push=args.only_push,
                        no_interaction=args.no_interaction, text=args.text)
-        logging.debug('k2-compose save')
+        logging.debug('k2-compose_file save')
+
+    @classmethod
+    def agent(cls, args):
+        while True:
+            try:
+                k2compose = K2ComposeCMD(ComposeConcrete(filename=args.file, url=args.url))
+                k2compose.agent(services=args.services)
+            except KeyboardInterrupt:
+                break
+        logging.debug('k2-compose_file agent')
+
     #
     # def config(self, args):
     #     print Color('{autored}NOTICE: You can define network_mode by using --net=[host,bridge,overlay,none]. default is overlay.{/autored}')
@@ -365,7 +375,7 @@ class K2Platform:
             'compose_concrete': compose_concrete
         }
 
-    def agent(self, args):
+    def _agent(self, args):
         print 'status_check_interval=%s' % args.interval
         print 'status_store=%s' % args.status_store
         print 'dry run=%s' % args.dry_run
