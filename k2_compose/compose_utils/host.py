@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from basenode import Node
 # from docker import Client
+from os import getenv
 from docker import DockerClient as Client
 import socket
-from common.common import HOST_CONNECT, HOST_DISCONNECT, HOST_STATUS,COLOR_HOST
+
+from basenode import Node
+from ..common.common import HOST_CONNECT, HOST_DISCONNECT, HOST_STATUS,COLOR_HOST
 socket.setdefaulttimeout(3)
 
 
@@ -15,12 +17,13 @@ def host_connect(host_instance=None):
         return
     if is_open(host_instance.metadata['dockerHost']):
         try:
-            host_instance.client.ping()
+            result = host_instance.client.ping()
         except Exception as e:
             logging.error('[%s: %s] connect error.' % (
                 host_instance.id, host_instance.metadata['dockerHost']))
         else:
-            host_instance.status_code = HOST_CONNECT
+            if result:
+                host_instance.status_code = HOST_CONNECT
     else:
         host_instance.status_code = HOST_DISCONNECT
     host_instance.status = HOST_STATUS[host_instance.status_code]
@@ -48,4 +51,6 @@ class Host(Node):
         self.color = COLOR_HOST[self.status_code]
         self.metadata['dockerHost'] = dockerhost
 
-        self.client = Client(self.metadata['dockerHost'],timeout=10,version='1.23')
+        # self.client = Client(self.metadata['dockerHost'],timeout=10,version='1.23')
+        api_version = getenv('DOCKER_API_VERSION','1.23')
+        self.client = Client(base_url=self.metadata['dockerHost'],version=api_version,timeout=10)

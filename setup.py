@@ -7,9 +7,9 @@ from setuptools import setup,find_packages
 # import version
 setup(name="k2-compose",
       version='0.0.6',
-      packages=find_packages(exclude=['tests']),
+      packages=find_packages(exclude=['tests.*']),
       # package_dir = {
-      #   '':'src'
+      #   '':'k2_compose'
       # },
       # packages=[
       #     '',
@@ -42,7 +42,7 @@ setup(name="k2-compose",
       install_requires=[
           'colorama>=0.3.7',
           'requests==2.7.0',
-          'docker-compose==1.14.0',
+          'docker-compose',
           'six>=1.9.0',
           'influxdb==3.0.0',
           'colorclass==2.2.0',
@@ -51,7 +51,7 @@ setup(name="k2-compose",
       ],
       entry_points={                                                             
           'console_scripts': [
-            'k2-compose=k2compose.k2_compose:run',
+            'k2-compose=k2_compose.run:run',
           ]
       }
       )

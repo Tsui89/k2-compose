@@ -1,8 +1,8 @@
 import yaml
-from compose_utils.basenode import Node
-from k2cutils.class_utils import cached_property
+from ..compose_utils.basenode import Node
+from ..k2cutils.class_utils import cached_property
 from terminaltables import SingleTable, AsciiTable
-from common.common import SERVICE_UNDEPLOYED,CONTAINER_STATUS,COLOR
+from ..common.common import SERVICE_UNDEPLOYED,CONTAINER_STATUS,COLOR
 
 class ComposeService(Node):
     def __init__(self, id='', service=None):

@@ -7,14 +7,14 @@ import logging
 import copy
 
 
-from compose_utils.toposort import toposort
-from compose_utils.confirm_input import confirm_input
-from service.service import ComposeService
-from compose_utils.host import Host, host_connect
-from container.container import Container
-from k2cutils.class_utils import cached_property
-from image.image_show import ImageInspect
-from common.common import *
+from ..compose_utils.toposort import toposort
+from ..compose_utils.confirm_input import confirm_input
+from ..service.service import ComposeService
+from ..compose_utils.host import Host, host_connect
+from ..container.container import Container
+from ..k2cutils.class_utils import cached_property
+from ..image.image_show import ImageInspect
+from ..common.common import *
 
 from multiprocessing.dummy import Pool as ThreadPool
 from terminaltables import SingleTable, AsciiTable

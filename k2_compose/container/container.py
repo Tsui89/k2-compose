@@ -5,12 +5,12 @@ import logging
 import subprocess
 
 from docker import errors
-from compose_file.compose_file import ComposeService
-from common.common import *
-from k2cutils.class_utils import cached_property
-from image.image_history import ImageHistory
-from compose_utils.confirm_input import confirm_input
-from image.image_show import ImageInspect
+from ..compose_file.compose_file import ComposeService
+from ..common.common import *
+from ..k2cutils.class_utils import cached_property
+from ..image.image_history import ImageHistory
+from ..compose_utils.confirm_input import confirm_input
+from ..image.image_show import ImageInspect
 
 from colorclass import Color
 

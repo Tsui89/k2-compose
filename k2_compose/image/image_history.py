@@ -4,8 +4,8 @@ import os
 import json
 from docker import DockerClient as Client
 from operator import itemgetter
-from colorama import Fore
-from k2cutils.misc import timestamp_to_local_isoformat
+# from colorama import Fore
+from ..k2cutils.misc import timestamp_to_local_isoformat
 
 
 # import logging
@@ -47,9 +47,9 @@ class ImageHistory:
         print '-------------------------------------------'
         for item in self.content:
             if item['current']:
-                print Fore.GREEN + format % (
-                '*', self.content.index(item), item['id'][7:19], timestamp_to_local_isoformat(item['created']))
-            else:
+            #     print Fore.GREEN + format % (
+            #     '*', self.content.index(item), item['id'][7:19], timestamp_to_local_isoformat(item['created']))
+            # else:
                 print format % (
                 ' ', self.content.index(item), item['id'][7:19], timestamp_to_local_isoformat(item['created']))
         print ''
