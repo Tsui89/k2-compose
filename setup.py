@@ -2,9 +2,14 @@
 # -*- coding: utf-8 -*-
 
 # from distutils.core import setup
+import os
 from setuptools import setup,find_packages
 # import setuptools
 # import version
+
+ROOT_DIR = os.path.dirname(__file__)
+SOURCE_DIR = os.path.join(ROOT_DIR)
+
 setup(name="k2-compose",
       version='0.0.6',
       packages=find_packages(exclude=['tests.*']),
