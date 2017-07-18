@@ -15,7 +15,7 @@ from docker import  errors
 
 from compose_utils.basenode import  DependsOn, RunsOn
 from common.common import *
-from compose.compose import ComposeConcrete, ComposeFile
+from compose_file.compose import ComposeConcrete, ComposeFile
 
 logging.basicConfig(format='%(levelname)s: %(message)s',
                     datefmt='%a, %d %b %Y %H:%M:%S')

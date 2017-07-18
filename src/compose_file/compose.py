@@ -20,6 +20,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 from terminaltables import SingleTable, AsciiTable
 from colorclass import Color
 from pick import pick
+import time
 
 def check_compose_file(filename):
     if not os.path.isfile(filename):
@@ -712,3 +713,26 @@ class ComposeConcrete(ComposeFile):
             table_instance.inner_row_border = True
             print table_instance.table
         return
+
+    def agent(self, services=None, preffix='default'):
+        # services = self.check_service(services)
+        self.ps(services,ignore_deps=True)
+
+        for host_name,host_instance in self.hosts_instance.items():
+            print self._message("hosts.%s"%(host_name), host_instance.status_code,
+                                preffix=preffix,host=host_name, deployment=self.project)
+
+        for service_name,container in self._containers.items():
+            print self._message("container.%s"%(service_name),container.status_code,
+                                preffix=preffix,host=container.hostname, deployment=self.project)
+
+    @classmethod
+    def _message(cls, name, value, **kwargs):
+        now = time.localtime() * 1000 # ms
+        tags = []
+        for k,v in kwargs:
+            tags.append("%s=%s"%(k,str(v)))
+        return "put {name} {now} {value} {tags}".format(name=name,
+                                                          now=now,
+                                                          value=value,
+                                                          tags=','.join(tags))

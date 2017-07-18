@@ -5,7 +5,7 @@ import logging
 import subprocess
 
 from docker import errors
-from compose.compose import ComposeService
+from compose_file.compose import ComposeService
 from common.common import *
 from k2cutils.class_utils import cached_property
 from image.image_history import ImageHistory
