@@ -21,54 +21,54 @@ logging.basicConfig(format='%(levelname)s: %(message)s',
                     datefmt='%a, %d %b %Y %H:%M:%S')
 
 # saved health-check status to influxdb when start/stop/restart/up/remove a service
-def status_store(args):
-    if not os.getenv("INFLUXDB"):
-        return
-    start_time = time.time()
-    compose_concrete = ComposeConcrete(filename=args.file, url=args.url)
-    logging.debug("%s consumed loading compose file" % (time.time() - start_time))
-    # check cluster
-    clusters = {}
-    logging.debug('Checking docker cluster info...')
-    for host_name, host_instance in compose_concrete.hosts_instance.items():
-        cli = host_instance.client
-        try:
-            info = cli.info()
-        except (errors.APIError, errors.DockerException) as e:
-            logging.error(e.message)
-        except Exception as e:
-            logging.error(e.message)
-        else:
-            clusters.update({host_name: info['ClusterStore']})
-
-    # if len(set(clusters.values())) > 1:
-    #     print Color(
-    #         '{autored}Not all docker hosts shares the same cluster store. Are they really in the same cluster?{/autored}')
-    #     sys.exit(-1)
-    # else:
-    #     cluster = clusters.values()[0]
-    cluster = clusters.values()[0]
-    net = compose_concrete.net
-
-    writer = db_writer.Writer(os.getenv("INFLUXDB"))
-    result = {
-        'tags': {
-            'cluster': cluster,
-            'net': net,
-            'deployment': compose_concrete.project,
-            'group': long(time.time() * 1000 * 1000 * 1000),  # nano
-        },
-        'services': {}
-    }
-
-    for service_name in args.services:
-        start_time = time.time()
-        k2compose = K2ComposeCMD(compose_concrete_instance=compose_concrete)
-        status = k2compose.ps(services=[service_name], json_format=False)
-        result['services'].update({service_name: (start_time, status.get(service_name))})
-    writer.write(result)
-    global SYS_RETURN_CODE
-    sys.exit(SYS_RETURN_CODE)
+# def status_store(args):
+#     if not os.getenv("INFLUXDB"):
+#         return
+#     start_time = time.time()
+#     compose_concrete = ComposeConcrete(filename=args.file, url=args.url)
+#     logging.debug("%s consumed loading compose file" % (time.time() - start_time))
+#     # check cluster
+#     clusters = {}
+#     logging.debug('Checking docker cluster info...')
+#     for host_name, host_instance in compose_concrete.hosts_instance.items():
+#         cli = host_instance.client
+#         try:
+#             info = cli.info()
+#         except (errors.APIError, errors.DockerException) as e:
+#             logging.error(e.message)
+#         except Exception as e:
+#             logging.error(e.message)
+#         else:
+#             clusters.update({host_name: info['ClusterStore']})
+#
+#     # if len(set(clusters.values())) > 1:
+#     #     print Color(
+#     #         '{autored}Not all docker hosts shares the same cluster store. Are they really in the same cluster?{/autored}')
+#     #     sys.exit(-1)
+#     # else:
+#     #     cluster = clusters.values()[0]
+#     cluster = clusters.values()[0]
+#     net = compose_concrete.net
+#
+#     writer = db_writer.Writer(os.getenv("INFLUXDB"))
+#     result = {
+#         'tags': {
+#             'cluster': cluster,
+#             'net': net,
+#             'deployment': compose_concrete.project,
+#             'group': long(time.time() * 1000 * 1000 * 1000),  # nano
+#         },
+#         'services': {}
+#     }
+#
+#     for service_name in args.services:
+#         start_time = time.time()
+#         k2compose = K2ComposeCMD(compose_concrete_instance=compose_concrete)
+#         status = k2compose.ps(services=[service_name], json_format=False)
+#         result['services'].update({service_name: (start_time, status.get(service_name))})
+#     writer.write(result)
+#     global SYS_RETURN_CODE
+#     sys.exit(SYS_RETURN_CODE)
 
 
 class K2ComposeCMD(object):
@@ -184,7 +184,7 @@ class K2Platform:
         k2compose.up(services=args.services, parameter=parameter,
                      ignore_deps=args.ignore_deps,
                      confirm_update=args.y)
-        status_store(args)
+        # status_store(args)
         logging.debug('k2-compose up')
 
     @classmethod
@@ -199,7 +199,7 @@ class K2Platform:
     def start(cls, args):
         k2compose = K2ComposeCMD(ComposeConcrete(filename=args.file, url=args.url))
         k2compose.start(services=args.services)
-        status_store(args)
+        # status_store(args)
         logging.debug('k2-compose start')
 
     @classmethod
@@ -215,21 +215,21 @@ class K2Platform:
     def stop(cls, args):
         k2compose = K2ComposeCMD(ComposeConcrete(filename=args.file, url=args.url))
         k2compose.stop(services=args.services)
-        status_store(args)
+        # status_store(args)
         logging.debug('k2-compose stop')
 
     @classmethod
     def restart(cls, args):
         k2compose = K2ComposeCMD(ComposeConcrete(filename=args.file, url=args.url))
         k2compose.restart(services=args.services)
-        status_store(args)
+        # status_store(args)
         logging.debug('k2-compose restart')
 
     @classmethod
     def rm(cls, args):
         k2compose = K2ComposeCMD(ComposeConcrete(filename=args.file, url=args.url))
         k2compose.rm(services=args.services, force=args.force)
-        status_store(args)
+        # status_store(args)
         logging.debug('k2-compose rm')
 
     @classmethod
