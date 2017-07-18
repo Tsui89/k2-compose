@@ -94,3 +94,5 @@ ENV/
 .idea/
 tests/.k2compose-compose.yml
 tests/.k2composetest-compose.yml
+src/.k2-compose-compose.yml
+src/.k2composetest-compose.yml

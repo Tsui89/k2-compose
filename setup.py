@@ -7,10 +7,10 @@ from setuptools import setup,find_packages
 # import version
 setup(name="k2-compose",
       version='0.0.6',
-      packages=find_packages('src'),
-      package_dir = {
-        '':'src'
-      },
+      packages=find_packages(exclude=['tests']),
+      # package_dir = {
+      #   '':'src'
+      # },
       # packages=[
       #     '',
       #     'health_agent',
@@ -41,7 +41,8 @@ setup(name="k2-compose",
       url='https://github.com/Tsui89/k2-compose',
       install_requires=[
           'colorama>=0.3.7',
-          'docker-compose==1.7.1',
+          'requests==2.7.0',
+          'docker-compose==1.14.0',
           'six>=1.9.0',
           'influxdb==3.0.0',
           'colorclass==2.2.0',

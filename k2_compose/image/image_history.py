@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import json
-from docker import Client
+from docker import DockerClient as Client
 from operator import itemgetter
 from colorama import Fore
 from k2cutils.misc import timestamp_to_local_isoformat

@@ -1,0 +1,12 @@
+services:
+  busybox1:
+    entrypoint:
+    - ping
+    - localhost
+    image: busybox:latest
+  busybox2:
+    entrypoint:
+    - ping
+    - localhost
+    image: busybox:latest
+version: '2'

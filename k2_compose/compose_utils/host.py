@@ -3,7 +3,8 @@
 
 import logging
 from basenode import Node
-from docker import Client
+# from docker import Client
+from docker import DockerClient as Client
 import socket
 from common.common import HOST_CONNECT, HOST_DISCONNECT, HOST_STATUS,COLOR_HOST
 socket.setdefaulttimeout(3)

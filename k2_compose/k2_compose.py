@@ -10,12 +10,12 @@ import time
 import argparse
 import logging
 
-from health_agent import db_writer
+# from health_agent import db_writer
 from docker import  errors
 
 from compose_utils.basenode import  DependsOn, RunsOn
 from common.common import *
-from compose_file.compose import ComposeConcrete, ComposeFile
+from compose_file.compose_file import ComposeConcrete, ComposeFile
 
 logging.basicConfig(format='%(levelname)s: %(message)s',
                     datefmt='%a, %d %b %Y %H:%M:%S')
@@ -324,138 +324,138 @@ class K2Platform:
     #         composer.update_extra_hosts()
     #         print 'Ready to fire! (Of course you may make necessary changes to those compose files)'
 
-    def _load_compose_file_for_agent(self, filename, url=None):
-        # auto-detecting cluster and overlay network
-        start_time = time.time()
-        compose_concrete = ComposeConcrete(filename=filename, url=url)
-
-        logging.debug("%s consumed loading compose file" % (time.time() - start_time))
-        # check cluster
-        clusters = {}
-        logging.debug('Checking docker cluster info...')
-        for host_name, host_instance in compose_concrete.hosts_instance.items():
-            if host_instance.status_code == HOST_DISCONNECT:
-                continue
-            cli = host_instance.client
-            try:
-                info = cli.info()
-            except (errors.APIError, errors.DockerException) as e:
-                logging.error(e.message)
-            except Exception as e:
-                logging.error(e.message)
-            else:
-                clusters.update({host_name: info['ClusterStore']})
-
-        # if len(set(clusters.values())) > 1:
-        #     print Color(
-        #         '{autored}Not all docker hosts shares the same cluster store. Are they really in the same cluster?{/autored}')
-        #     sys.exit(-1)
-        # else:
-        #     cluster = clusters.values()[0]
-        cluster = clusters.values()[0]
-        net = compose_concrete.net
-        print 'summary of status data tags:'
-        print '\tnet=%s' % net
-        print '\tdeployment=%s' % compose_concrete.project
-        # print '\tcomponent=one of %s' % json.dumps(compose_concrete.services.keys())
-        print '\tgroup=<beginning time of a check>'
-        return {
-            'cluster': cluster,
-            'net': net,
-            'compose_concrete': compose_concrete
-        }
-
-    def agent(self, args):
-        print 'status_check_interval=%s' % args.interval
-        print 'status_store=%s' % args.status_store
-        print 'dry run=%s' % args.dry_run
-        print 'auto-reload=%s' % args.auto_reload
-        print 'service check list=%s' % args.services
-        print 'restart if unhealthy=%s' % args.restart_if_unhealthy
-        writer = db_writer.Writer(args.status_store)
-
-        loaded_compose = self._load_compose_file_for_agent(filename=args.file, url=args.url)
-
-        while True:
-            start_loop_ts = time.time()
-
-            cluster = loaded_compose['cluster']
-            net = loaded_compose['net']
-            compose_concrete = loaded_compose['compose_concrete']
-            service_result = {
-                'tags': {
-                    'cluster': cluster,
-                    'net': net,
-                    'deployment': compose_concrete.project,
-                    'group': long(time.time() * 1000 * 1000 * 1000),  # nano
-                },
-                'services': {}
-            }
-            host_result = {
-                'tags': {
-                    'cluster': cluster,
-                    'deployment': compose_concrete.project,
-                    'group': long(time.time() * 1000 * 1000 * 1000),  # nano
-                },
-                'hosts': {}
-            }
-            container_cpu_result = {
-                'tags': {
-                    'cluster': cluster,
-                    'deployment': compose_concrete.project,
-                },
-                'cpu': {}
-            }
-            container_mem_result = {
-                'tags': {
-                    'cluster': cluster,
-                    'deployment': compose_concrete.project,
-                },
-                'mem': {}
-            }
-
-            print '\thost=one of %s' % loaded_compose['compose_concrete'].hosts
-
-            for host_name, host_instance in loaded_compose['compose_concrete'].hosts_instance.items():
-                start_time = time.time()
-                if host_instance.status_code == HOST_CONNECT:
-                    host_result['hosts'].update({host_instance.metadata['dockerHost']: (start_time, HOST_CONNECT)})
-                else:
-                    host_result['hosts'].update({host_instance.metadata['dockerHost']: (start_time, HOST_DISCONNECT)})
-            writer.write(host_result)  # hosts health
-
-            services = compose_concrete.check_service(args.services)
-
-            print '\tcomponent=one of %s' % (services)
-
-            for s in services:
-                start_time = time.time()
-                status = compose_concrete.ps(services=[s], ignore_deps=True)
-                print status
-                if status.get(s) == SERVICE_RUNNING or status.get(s) == SERVICE_ERROR:
-                    container = compose_concrete.getcontainer(s)
-                    cpu_percent, mem_percent, mem_limit = container.stats()
-                    if cpu_percent is not None and mem_percent is not None:
-                        container_cpu_result['cpu'].update({s: (start_time, cpu_percent)})
-                        container_mem_result['mem'].update({s: (start_time, mem_percent, mem_limit)})
-                start_time = time.time()
-                service_result['services'].update({s: (start_time, status.get(s))})
-                if args.dry_run:
-                    print service_result
-                else:
-                    writer.write(service_result)
-                if args.restart_if_unhealthy is not None and s in args.restart_if_unhealthy:
-                    if status.get(s) != SERVICE_RUNNING and status.get(s) != SERVICE_UNDEPLOYED:
-                        print 'restarting %s (status=%s)' % (s, status.get(s))
-                        compose_concrete.restart(services=[s])
-                # host = compose_concrete.get_host_instance_by_containerid(s)
-                # host_result['hosts'].update({host.metadata['dockerHost']: (start_time, host.status_code)})
-            writer.write(container_cpu_result)
-            writer.write(container_mem_result)
-            if time.time() - start_loop_ts < args.interval:
-                time.sleep(args.interval)
-            if args.auto_reload:
-                loaded_compose = self._load_compose_file_for_agent(filename=args.file, url=args.url)
+    # def _load_compose_file_for_agent(self, filename, url=None):
+    #     # auto-detecting cluster and overlay network
+    #     start_time = time.time()
+    #     compose_concrete = ComposeConcrete(filename=filename, url=url)
+    #
+    #     logging.debug("%s consumed loading compose file" % (time.time() - start_time))
+    #     # check cluster
+    #     clusters = {}
+    #     logging.debug('Checking docker cluster info...')
+    #     for host_name, host_instance in compose_concrete.hosts_instance.items():
+    #         if host_instance.status_code == HOST_DISCONNECT:
+    #             continue
+    #         cli = host_instance.client
+    #         try:
+    #             info = cli.info()
+    #         except (errors.APIError, errors.DockerException) as e:
+    #             logging.error(e.message)
+    #         except Exception as e:
+    #             logging.error(e.message)
+    #         else:
+    #             clusters.update({host_name: info['ClusterStore']})
+    #
+    #     # if len(set(clusters.values())) > 1:
+    #     #     print Color(
+    #     #         '{autored}Not all docker hosts shares the same cluster store. Are they really in the same cluster?{/autored}')
+    #     #     sys.exit(-1)
+    #     # else:
+    #     #     cluster = clusters.values()[0]
+    #     cluster = clusters.values()[0]
+    #     net = compose_concrete.net
+    #     print 'summary of status data tags:'
+    #     print '\tnet=%s' % net
+    #     print '\tdeployment=%s' % compose_concrete.project
+    #     # print '\tcomponent=one of %s' % json.dumps(compose_concrete.services.keys())
+    #     print '\tgroup=<beginning time of a check>'
+    #     return {
+    #         'cluster': cluster,
+    #         'net': net,
+    #         'compose_concrete': compose_concrete
+    #     }
+    #
+    # def agent(self, args):
+    #     print 'status_check_interval=%s' % args.interval
+    #     print 'status_store=%s' % args.status_store
+    #     print 'dry run=%s' % args.dry_run
+    #     print 'auto-reload=%s' % args.auto_reload
+    #     print 'service check list=%s' % args.services
+    #     print 'restart if unhealthy=%s' % args.restart_if_unhealthy
+    #     writer = db_writer.Writer(args.status_store)
+    #
+    #     loaded_compose = self._load_compose_file_for_agent(filename=args.file, url=args.url)
+    #
+    #     while True:
+    #         start_loop_ts = time.time()
+    #
+    #         cluster = loaded_compose['cluster']
+    #         net = loaded_compose['net']
+    #         compose_concrete = loaded_compose['compose_concrete']
+    #         service_result = {
+    #             'tags': {
+    #                 'cluster': cluster,
+    #                 'net': net,
+    #                 'deployment': compose_concrete.project,
+    #                 'group': long(time.time() * 1000 * 1000 * 1000),  # nano
+    #             },
+    #             'services': {}
+    #         }
+    #         host_result = {
+    #             'tags': {
+    #                 'cluster': cluster,
+    #                 'deployment': compose_concrete.project,
+    #                 'group': long(time.time() * 1000 * 1000 * 1000),  # nano
+    #             },
+    #             'hosts': {}
+    #         }
+    #         container_cpu_result = {
+    #             'tags': {
+    #                 'cluster': cluster,
+    #                 'deployment': compose_concrete.project,
+    #             },
+    #             'cpu': {}
+    #         }
+    #         container_mem_result = {
+    #             'tags': {
+    #                 'cluster': cluster,
+    #                 'deployment': compose_concrete.project,
+    #             },
+    #             'mem': {}
+    #         }
+    #
+    #         print '\thost=one of %s' % loaded_compose['compose_concrete'].hosts
+    #
+    #         for host_name, host_instance in loaded_compose['compose_concrete'].hosts_instance.items():
+    #             start_time = time.time()
+    #             if host_instance.status_code == HOST_CONNECT:
+    #                 host_result['hosts'].update({host_instance.metadata['dockerHost']: (start_time, HOST_CONNECT)})
+    #             else:
+    #                 host_result['hosts'].update({host_instance.metadata['dockerHost']: (start_time, HOST_DISCONNECT)})
+    #         writer.write(host_result)  # hosts health
+    #
+    #         services = compose_concrete.check_service(args.services)
+    #
+    #         print '\tcomponent=one of %s' % (services)
+    #
+    #         for s in services:
+    #             start_time = time.time()
+    #             status = compose_concrete.ps(services=[s], ignore_deps=True)
+    #             print status
+    #             if status.get(s) == SERVICE_RUNNING or status.get(s) == SERVICE_ERROR:
+    #                 container = compose_concrete.getcontainer(s)
+    #                 cpu_percent, mem_percent, mem_limit = container.stats()
+    #                 if cpu_percent is not None and mem_percent is not None:
+    #                     container_cpu_result['cpu'].update({s: (start_time, cpu_percent)})
+    #                     container_mem_result['mem'].update({s: (start_time, mem_percent, mem_limit)})
+    #             start_time = time.time()
+    #             service_result['services'].update({s: (start_time, status.get(s))})
+    #             if args.dry_run:
+    #                 print service_result
+    #             else:
+    #                 writer.write(service_result)
+    #             if args.restart_if_unhealthy is not None and s in args.restart_if_unhealthy:
+    #                 if status.get(s) != SERVICE_RUNNING and status.get(s) != SERVICE_UNDEPLOYED:
+    #                     print 'restarting %s (status=%s)' % (s, status.get(s))
+    #                     compose_concrete.restart(services=[s])
+    #             # host = compose_concrete.get_host_instance_by_containerid(s)
+    #             # host_result['hosts'].update({host.metadata['dockerHost']: (start_time, host.status_code)})
+    #         writer.write(container_cpu_result)
+    #         writer.write(container_mem_result)
+    #         if time.time() - start_loop_ts < args.interval:
+    #             time.sleep(args.interval)
+    #         if args.auto_reload:
+    #             loaded_compose = self._load_compose_file_for_agent(filename=args.file, url=args.url)
 
 
 class Cmdline:
