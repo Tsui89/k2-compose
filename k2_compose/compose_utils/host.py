@@ -4,7 +4,7 @@
 import logging
 # from docker import Client
 from os import getenv
-from docker import DockerClient as Client
+from docker import APIClient as Client
 import socket
 
 from basenode import Node

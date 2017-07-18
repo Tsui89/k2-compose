@@ -47,7 +47,7 @@ setup(name="k2-compose",
       install_requires=[
           'colorama>=0.3.7',
           'requests==2.7.0',
-          'docker-compose',
+          'docker-compose==1.14.0',
           'six>=1.9.0',
           'influxdb==3.0.0',
           'colorclass==2.2.0',
