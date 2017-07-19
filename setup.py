@@ -11,7 +11,7 @@ ROOT_DIR = os.path.dirname(__file__)
 SOURCE_DIR = os.path.join(ROOT_DIR)
 
 setup(name="k2-compose",
-      version='0.0.6',
+      version='0.0.7rc2',
       packages=find_packages(exclude=['tests.*']),
       # package_dir = {
       #   '':'k2_compose'
@@ -45,14 +45,13 @@ setup(name="k2-compose",
       author_email='wch.c@qq.com',
       url='https://github.com/Tsui89/k2-compose',
       install_requires=[
-          'colorama>=0.3.7',
-          'requests==2.7.0',
+          # 'colorama>=0.3.7',
           'docker-compose==1.14.0',
           'six>=1.9.0',
-          'influxdb==3.0.0',
           'colorclass==2.2.0',
           'terminaltables==3.0.0',
           'pick',
+          'pytz'
       ],
       entry_points={                                                             
           'console_scripts': [

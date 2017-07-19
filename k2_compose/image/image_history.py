@@ -6,7 +6,7 @@ from docker import APIClient as Client
 from operator import itemgetter
 # from colorama import Fore
 from ..k2cutils.misc import timestamp_to_local_isoformat
-
+from ..common.common import DOCKER_API_VERSION
 
 # import logging
 # logging.getLogger().setLevel(logging.DEBUG)
@@ -20,7 +20,7 @@ class ImageHistory:
         self.host = host
         self.content = content if content else []
 
-        self._docker_client = client if client else Client(self.host, version=os.getenv('DOCKER_API_VERSION','1.23'))
+        self._docker_client = client if client else Client(self.host, version=DOCKER_API_VERSION)
         pass
 
     @classmethod

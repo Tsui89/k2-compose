@@ -8,7 +8,7 @@ from docker import APIClient as Client
 import socket
 
 from basenode import Node
-from ..common.common import HOST_CONNECT, HOST_DISCONNECT, HOST_STATUS,COLOR_HOST
+from ..common.common import HOST_CONNECT, HOST_DISCONNECT, HOST_STATUS, COLOR_HOST, DOCKER_API_VERSION
 socket.setdefaulttimeout(3)
 
 
@@ -52,5 +52,4 @@ class Host(Node):
         self.metadata['dockerHost'] = dockerhost
 
         # self.client = Client(self.metadata['dockerHost'],timeout=10,version='1.23')
-        api_version = getenv('DOCKER_API_VERSION','1.23')
-        self.client = Client(base_url=self.metadata['dockerHost'],version=api_version,timeout=10)
+        self.client = Client(base_url=self.metadata['dockerHost'],version=DOCKER_API_VERSION,timeout=10)

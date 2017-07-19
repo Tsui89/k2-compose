@@ -28,3 +28,6 @@ CONTAINER_EXIT_WAIT = 10
 SYS_RETURN_CODE = 0  # container exit code ignore health check
 
 DEBUG = False
+
+from os import getenv
+DOCKER_API_VERSION = getenv('DOCKER_API_VERSION', '1.23')
