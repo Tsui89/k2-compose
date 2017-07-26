@@ -730,7 +730,7 @@ class ComposeConcrete(ComposeFile):
     def _message(cls, name, value, **kwargs):
         now = time.localtime() * 1000 # ms
         tags = []
-        for k,v in kwargs:
+        for k,v in kwargs.items():
             tags.append("%s=%s"%(k,str(v)))
         return "put {name} {now} {value} {tags}".format(name=name,
                                                           now=now,
