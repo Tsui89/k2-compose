@@ -43,7 +43,7 @@ def subprocesscmd(cmd_str='', timeout=None, discription='', env=os.environ, show
         logging.error('Aborted by user.')
         return HEALTH_CHECK_EXEC_TIME_ERROR
 
-    _exec_time = time.time() - _time_begin
+    _exec_time = (time.time() - _time_begin)*1000 #ms
 
     if ret.poll() is None:
         ret.send_signal(signal.SIGINT)
