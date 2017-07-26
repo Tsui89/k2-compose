@@ -270,202 +270,19 @@ class K2Platform:
 
     @classmethod
     def agent(cls, args):
+        logging.debug('k2-compose_file agent')
+
+        sleep_time = args.interval if args.interval else 30
         while True:
             try:
                 k2compose = K2ComposeCMD(ComposeConcrete(filename=args.file, url=args.url))
                 k2compose.agent(services=args.services)
             except KeyboardInterrupt:
                 break
-        logging.debug('k2-compose_file agent')
-
-    #
-    # def config(self, args):
-    #     print Color('{autored}NOTICE: You can define network_mode by using --net=[host,bridge,overlay,none]. default is overlay.{/autored}')
-    #
-    #     sel = Selector()
-    #     if args.input_config:
-    #         config = yaml.load(open(args.input_config))
-    #         kmx_version = config.get('kmx-version', None)
-    #     else:
-    #         config = sel.ask_for_version()
-    #         kmx_version = config.get('kmx-version', None)
-    #
-    #     if kmx_version is None:
-    #         print "Missing kmx-version"
-    #         sys.exit(-1)
-    #     composer = sel.get_composer(kmx_version)
-    #     if composer is None:
-    #         print "Invalid kmx-version %s. Select from %s" % (
-    #             kmx_version, json.dumps(sel.available_versions))
-    #         sys.exit(-1)
-    #
-    #     if args.net:
-    #         try:
-    #             composer.set_network(args.net)
-    #         except Exception as e:
-    #             print Color("{autored}"+e.message +"{/autored}")
-    #             sys.exit(-1)
-    #         else:
-    #             print Color("{autored}NOTICE: Use %s network_mode.{/autored}"%args.net)
-    #     else:
-    #         print Color("{autored}NOTICE: Use overlay network_mode by default.{/autored}")
-    #
-    #     time.sleep(2)
-    #
-    #     if args.input_config:
-    #         composer.set_config(yaml.load(open(args.input_config)))
-    #     else:
-    #         composer.ask_for_config()
-    #
-    #     if args.only_save:
-    #         composer.save()
-    #         print '--only-save will be discarded in future version b/c user answer is always saved'
-    #     else:
-    #         composer.save()
-    #         composer.optimize()
-    #         composer.confirm()
-    #         composer.generate_main()
-    #         composer.generate_init()
-    #         composer.generate_utils()
-    #         composer.generate_misc()
-    #         composer.generate_monitor()
-    #
-    #         composer.update_extra_hosts()
-    #         print 'Ready to fire! (Of course you may make necessary changes to those compose files)'
-
-    # def _load_compose_file_for_agent(self, filename, url=None):
-    #     # auto-detecting cluster and overlay network
-    #     start_time = time.time()
-    #     compose_concrete = ComposeConcrete(filename=filename, url=url)
-    #
-    #     logging.debug("%s consumed loading compose file" % (time.time() - start_time))
-    #     # check cluster
-    #     clusters = {}
-    #     logging.debug('Checking docker cluster info...')
-    #     for host_name, host_instance in compose_concrete.hosts_instance.items():
-    #         if host_instance.status_code == HOST_DISCONNECT:
-    #             continue
-    #         cli = host_instance.client
-    #         try:
-    #             info = cli.info()
-    #         except (errors.APIError, errors.DockerException) as e:
-    #             logging.error(e.message)
-    #         except Exception as e:
-    #             logging.error(e.message)
-    #         else:
-    #             clusters.update({host_name: info['ClusterStore']})
-    #
-    #     # if len(set(clusters.values())) > 1:
-    #     #     print Color(
-    #     #         '{autored}Not all docker hosts shares the same cluster store. Are they really in the same cluster?{/autored}')
-    #     #     sys.exit(-1)
-    #     # else:
-    #     #     cluster = clusters.values()[0]
-    #     cluster = clusters.values()[0]
-    #     net = compose_concrete.net
-    #     print 'summary of status data tags:'
-    #     print '\tnet=%s' % net
-    #     print '\tdeployment=%s' % compose_concrete.project
-    #     # print '\tcomponent=one of %s' % json.dumps(compose_concrete.services.keys())
-    #     print '\tgroup=<beginning time of a check>'
-    #     return {
-    #         'cluster': cluster,
-    #         'net': net,
-    #         'compose_concrete': compose_concrete
-    #     }
-    #
-    # def agent(self, args):
-    #     print 'status_check_interval=%s' % args.interval
-    #     print 'status_store=%s' % args.status_store
-    #     print 'dry run=%s' % args.dry_run
-    #     print 'auto-reload=%s' % args.auto_reload
-    #     print 'service check list=%s' % args.services
-    #     print 'restart if unhealthy=%s' % args.restart_if_unhealthy
-    #     writer = db_writer.Writer(args.status_store)
-    #
-    #     loaded_compose = self._load_compose_file_for_agent(filename=args.file, url=args.url)
-    #
-    #     while True:
-    #         start_loop_ts = time.time()
-    #
-    #         cluster = loaded_compose['cluster']
-    #         net = loaded_compose['net']
-    #         compose_concrete = loaded_compose['compose_concrete']
-    #         service_result = {
-    #             'tags': {
-    #                 'cluster': cluster,
-    #                 'net': net,
-    #                 'deployment': compose_concrete.project,
-    #                 'group': long(time.time() * 1000 * 1000 * 1000),  # nano
-    #             },
-    #             'services': {}
-    #         }
-    #         host_result = {
-    #             'tags': {
-    #                 'cluster': cluster,
-    #                 'deployment': compose_concrete.project,
-    #                 'group': long(time.time() * 1000 * 1000 * 1000),  # nano
-    #             },
-    #             'hosts': {}
-    #         }
-    #         container_cpu_result = {
-    #             'tags': {
-    #                 'cluster': cluster,
-    #                 'deployment': compose_concrete.project,
-    #             },
-    #             'cpu': {}
-    #         }
-    #         container_mem_result = {
-    #             'tags': {
-    #                 'cluster': cluster,
-    #                 'deployment': compose_concrete.project,
-    #             },
-    #             'mem': {}
-    #         }
-    #
-    #         print '\thost=one of %s' % loaded_compose['compose_concrete'].hosts
-    #
-    #         for host_name, host_instance in loaded_compose['compose_concrete'].hosts_instance.items():
-    #             start_time = time.time()
-    #             if host_instance.status_code == HOST_CONNECT:
-    #                 host_result['hosts'].update({host_instance.metadata['dockerHost']: (start_time, HOST_CONNECT)})
-    #             else:
-    #                 host_result['hosts'].update({host_instance.metadata['dockerHost']: (start_time, HOST_DISCONNECT)})
-    #         writer.write(host_result)  # hosts health
-    #
-    #         services = compose_concrete.check_service(args.services)
-    #
-    #         print '\tcomponent=one of %s' % (services)
-    #
-    #         for s in services:
-    #             start_time = time.time()
-    #             status = compose_concrete.ps(services=[s], ignore_deps=True)
-    #             print status
-    #             if status.get(s) == SERVICE_RUNNING or status.get(s) == SERVICE_ERROR:
-    #                 container = compose_concrete.getcontainer(s)
-    #                 cpu_percent, mem_percent, mem_limit = container.stats()
-    #                 if cpu_percent is not None and mem_percent is not None:
-    #                     container_cpu_result['cpu'].update({s: (start_time, cpu_percent)})
-    #                     container_mem_result['mem'].update({s: (start_time, mem_percent, mem_limit)})
-    #             start_time = time.time()
-    #             service_result['services'].update({s: (start_time, status.get(s))})
-    #             if args.dry_run:
-    #                 print service_result
-    #             else:
-    #                 writer.write(service_result)
-    #             if args.restart_if_unhealthy is not None and s in args.restart_if_unhealthy:
-    #                 if status.get(s) != SERVICE_RUNNING and status.get(s) != SERVICE_UNDEPLOYED:
-    #                     print 'restarting %s (status=%s)' % (s, status.get(s))
-    #                     compose_concrete.restart(services=[s])
-    #             # host = compose_concrete.get_host_instance_by_containerid(s)
-    #             # host_result['hosts'].update({host.metadata['dockerHost']: (start_time, host.status_code)})
-    #         writer.write(container_cpu_result)
-    #         writer.write(container_mem_result)
-    #         if time.time() - start_loop_ts < args.interval:
-    #             time.sleep(args.interval)
-    #         if args.auto_reload:
-    #             loaded_compose = self._load_compose_file_for_agent(filename=args.file, url=args.url)
-
+            try:
+                time.sleep(sleep_time)
+            except:
+                break
 
 class Cmdline:
     L1_SUB_COMMANDS = ['up', 'ps', 'start', 'stop', 'restart', 'rm', 'logs',
@@ -695,17 +512,6 @@ class Cmdline:
     def agent(cls, cs, parser):
         parser.add_argument('--interval', default=30,
                             help='sleep time between to check group (not exactly sample interval)')
-        parser.add_argument('--status-store',
-                            default='influxdb://localhost:8086',
-                            help='Health status store')
-        parser.add_argument('--auto-reload', action='store_true', default=False,
-                            help='reload compose file before each check interval')
-        parser.add_argument('--restart-if-unhealthy',
-                            action='append',
-                            help='list of services to restart if unhealthy')
-        parser.add_argument('--dry-run',
-                            action='store_true',
-                            help='dry run, do not actually write result to database')
         parser.add_argument(
             'services',
             nargs='*',

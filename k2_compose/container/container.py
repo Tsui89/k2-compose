@@ -5,7 +5,7 @@ import logging
 import subprocess
 
 from docker import errors
-from ..compose_file.compose_file import ComposeService
+from ..service.service import ComposeService
 from ..common.common import *
 from ..k2cutils.class_utils import cached_property
 from ..image.image_history import ImageHistory
@@ -18,8 +18,8 @@ from colorclass import Color
 def subprocesscmd(cmd_str='', timeout=None, discription='', env=os.environ, show_message=True):
     logging.debug('%s DOCKER_HOST=%s %s ' % (
         discription, env.get('DOCKER_HOST'), cmd_str))
-    global SYS_RETURN_CODE
     poll_time = 0.2
+    _time_begin = time.time()
     if show_message:
         stdout = None
         stderr = None
@@ -30,11 +30,10 @@ def subprocesscmd(cmd_str='', timeout=None, discription='', env=os.environ, show
         ret = subprocess.Popen(cmd_str, stdout=stdout, stderr=stderr, shell=True, env=env)
     except OSError as e:
         logging.error('%s %s %s %s' % (discription, e, cmd_str, str(env)))
-        SYS_RETURN_CODE = SYS_RETURN_CODE if timeout else 166
-        return False
+        return HEALTH_CHECK_EXEC_TIME_ERROR
     try:
         if timeout:
-            deadtime = time.time() + timeout
+            deadtime = _time_begin + timeout
             while time.time() < deadtime and ret.poll() is None:
                 time.sleep(poll_time)
         else:
@@ -42,15 +41,15 @@ def subprocesscmd(cmd_str='', timeout=None, discription='', env=os.environ, show
     except KeyboardInterrupt:
         ret.send_signal(signal.SIGINT)
         logging.error('Aborted by user.')
-        SYS_RETURN_CODE = SYS_RETURN_CODE if timeout else 167
-        return False
+        return HEALTH_CHECK_EXEC_TIME_ERROR
+
+    _exec_time = time.time() - _time_begin
 
     if ret.poll() is None:
         ret.send_signal(signal.SIGINT)
         logging.error(
             '%s : Exec [%s] overtime.' % (discription, cmd_str))
-        SYS_RETURN_CODE = SYS_RETURN_CODE if timeout else 168
-        return False
+        return -_exec_time
 
     if not show_message:
         for line in ret.stdout:
@@ -59,9 +58,11 @@ def subprocesscmd(cmd_str='', timeout=None, discription='', env=os.environ, show
         for line in ret.stderr:
             if line:
                 logging.error('%s %s' % (discription, line.strip('\n')))
-    SYS_RETURN_CODE = SYS_RETURN_CODE if timeout else ret.returncode
+
     if ret.returncode == 0:
-        return True
+        return _exec_time
+    else:
+        return -_exec_time
 
 
 class Container(ComposeService):
@@ -73,6 +74,7 @@ class Container(ComposeService):
         self._image_status = 'unchanged'
         # self._inspect_image=
         self.project = project
+        self.exec_time = HEALTH_CHECK_EXEC_TIME_UNDEPLOYED
         self.docker_compose_file = docker_compose_file
         self.containerid = self.project + '_' + self.id + \
                            DOCKER_PROJECT_SUFFIX
@@ -183,7 +185,12 @@ class Container(ComposeService):
                 self._image_status = 'changed'
 
     def healthcheck(self):
-        if self.status_code not in [SERVICE_ERROR, SERVICE_RUNNING]:
+        if self.status_code == SERVICE_UNDEPLOYED:
+            self.exec_time = HEALTH_CHECK_EXEC_TIME_UNDEPLOYED
+            return
+
+        if self.status_code == SERVICE_STOP:
+            self.exec_time = HEALTH_CHECK_EXEC_TIME_STOPPED
             return
 
         health_check = self.health_check
@@ -192,12 +199,14 @@ class Container(ComposeService):
         timeout = health_check.get('timeout', 10)
 
         if cmd:
-            if subprocesscmd(cmd, timeout, show_message=False,
-                             discription='In [%s] health check:' % self.id):
+            self.exec_time = subprocesscmd(cmd, timeout, show_message=False,
+                                            discription='In [%s] health check:' % self.id)
+            if self.exec_time >= HEALTH_CHECK_EXEC_TIME_RUNNING:
                 self.status_code = SERVICE_RUNNING
             else:
                 self.status_code = SERVICE_ERROR
         else:
+            self.exec_time = HEALTH_CHECK_EXEC_TIME_RUNNING
             self.status_code = SERVICE_RUNNING
 
         self.status = CONTAINER_STATUS[self.status_code]

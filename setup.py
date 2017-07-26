@@ -11,7 +11,7 @@ ROOT_DIR = os.path.dirname(__file__)
 SOURCE_DIR = os.path.join(ROOT_DIR)
 
 setup(name="k2-compose",
-      version='0.0.7rc2',
+      version='0.0.7rc5',
       packages=find_packages(exclude=['tests.*']),
       # package_dir = {
       #   '':'k2_compose'

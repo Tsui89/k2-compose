@@ -723,12 +723,12 @@ class ComposeConcrete(ComposeFile):
                                 preffix=preffix,host=host_name, deployment=self.project)
 
         for service_name,container in self._containers.items():
-            print self._message("container.%s"%(service_name),container.status_code,
+            print self._message("container.%s"%(service_name),container.exec_time,
                                 preffix=preffix,host=container.hostname, deployment=self.project)
 
     @classmethod
     def _message(cls, name, value, **kwargs):
-        now = time.localtime() * 1000 # ms
+        now = time.time() * 1000 # ms
         tags = []
         for k,v in kwargs.items():
             tags.append("%s=%s"%(k,str(v)))
