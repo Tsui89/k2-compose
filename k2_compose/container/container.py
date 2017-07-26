@@ -1,5 +1,6 @@
 import os
 import time
+import requests
 import signal
 import logging
 import subprocess
@@ -15,7 +16,27 @@ from ..image.image_show import ImageInspect
 from colorclass import Color
 
 
-def subprocesscmd(cmd_str='', timeout=None, discription='', env=os.environ, show_message=True):
+def http_get(url, timeout=None, discription=None, show_message=True):
+    _time_begin = time.time()
+    url = url if url.startswith('http://') or url.startswith(
+        'https://') else 'http://' + url
+    try:
+        resp = requests.get(url, timeout)
+    except Exception as e:
+        logging.error(e.message)
+        return HEALTH_CHECK_EXEC_TIME_ERROR
+
+    _exec_time = (time.time() - _time_begin) * 1000  # ms
+    if DEBUG:
+        logging.info("%s %s"%(discription, resp.text))
+    if resp.status_code == 200:
+        return _exec_time
+    else:
+        return -_exec_time
+
+
+def subprocesscmd(cmd_str='', timeout=None, discription='', env=os.environ,
+                  show_message=True):
     logging.debug('%s DOCKER_HOST=%s %s ' % (
         discription, env.get('DOCKER_HOST'), cmd_str))
     poll_time = 0.2
@@ -27,7 +48,8 @@ def subprocesscmd(cmd_str='', timeout=None, discription='', env=os.environ, show
         stdout = subprocess.PIPE
         stderr = subprocess.PIPE
     try:
-        ret = subprocess.Popen(cmd_str, stdout=stdout, stderr=stderr, shell=True, env=env)
+        ret = subprocess.Popen(cmd_str, stdout=stdout, stderr=stderr,
+                               shell=True, env=env)
     except OSError as e:
         logging.error('%s %s %s %s' % (discription, e, cmd_str, str(env)))
         return HEALTH_CHECK_EXEC_TIME_ERROR
@@ -43,7 +65,7 @@ def subprocesscmd(cmd_str='', timeout=None, discription='', env=os.environ, show
         logging.error('Aborted by user.')
         return HEALTH_CHECK_EXEC_TIME_ERROR
 
-    _exec_time = (time.time() - _time_begin)*1000 #ms
+    _exec_time = (time.time() - _time_begin) * 1000  # ms
 
     if ret.poll() is None:
         ret.send_signal(signal.SIGINT)
@@ -66,13 +88,13 @@ def subprocesscmd(cmd_str='', timeout=None, discription='', env=os.environ, show
 
 
 class Container(ComposeService):
-    def __init__(self, id='', service=None, hostip='',project=DOCKER_PROJECT_PREFIX, docker_compose_file=DOCKER_COMPOSE_FILE):
+    def __init__(self, id='', service=None, hostip='',
+                 project=DOCKER_PROJECT_PREFIX,
+                 docker_compose_file=DOCKER_COMPOSE_FILE):
         ComposeService.__init__(self, id=id, service=service)
         self._hostip = hostip
         self._client = None
-        # self._service = service
         self._image_status = 'unchanged'
-        # self._inspect_image=
         self.project = project
         self.exec_time = HEALTH_CHECK_EXEC_TIME_UNDEPLOYED
         self.docker_compose_file = docker_compose_file
@@ -96,8 +118,12 @@ class Container(ComposeService):
 
     @cached_property
     def image_history(self):
-        history = ImageHistory.load(self.image_name, self.image_tag, self._hostip)
-        return history if history is not None else ImageHistory(self.image_name, self.image_tag, self._hostip, self._client)
+        history = ImageHistory.load(self.image_name, self.image_tag,
+                                    self._hostip)
+        return history if history is not None else ImageHistory(self.image_name,
+                                                                self.image_tag,
+                                                                self._hostip,
+                                                                self._client)
 
     def check_client(self, msg=''):
         return True
@@ -111,13 +137,18 @@ class Container(ComposeService):
 
     def stats(self):
         try:
-            stats = self.client.stats(self.containerid, stream=False, decode=True)
+            stats = self.client.stats(self.containerid, stream=False,
+                                      decode=True)
             mem_limit = stats['memory_stats']['limit']
-            mem_percent = float(stats['memory_stats']['usage']*100)/mem_limit
+            mem_percent = float(
+                stats['memory_stats']['usage'] * 100) / mem_limit
             cpu_percent = 0.0
             cpu_delta = float(stats['cpu_stats']['cpu_usage']['total_usage']
-                              - stats['precpu_stats']['cpu_usage']['total_usage'])
-            system_delta = float(stats['cpu_stats']['system_cpu_usage'] - stats['precpu_stats']['system_cpu_usage'])
+                              - stats['precpu_stats']['cpu_usage'][
+                                  'total_usage'])
+            system_delta = float(
+                stats['cpu_stats']['system_cpu_usage'] - stats['precpu_stats'][
+                    'system_cpu_usage'])
             processor_num = len(stats['cpu_stats']['cpu_usage']['percpu_usage'])
             if cpu_delta > 0.0 and system_delta > 0.0:
                 cpu_percent = (cpu_delta / system_delta) * processor_num * 100.0
@@ -195,16 +226,28 @@ class Container(ComposeService):
 
         health_check = self.health_check
 
-        cmd = health_check.get('shell', '')
         timeout = health_check.get('timeout', 10)
+        if health_check.has_key('shell'):
+            cmd = health_check.get('shell', '')
 
-        if cmd:
-            self.exec_time = subprocesscmd(cmd, timeout, show_message=False,
-                                            discription='In [%s] health check:' % self.id)
-            if self.exec_time >= HEALTH_CHECK_EXEC_TIME_RUNNING:
-                self.status_code = SERVICE_RUNNING
+            if cmd:
+                self.exec_time = subprocesscmd(cmd, timeout, show_message=False,
+                                               discription='In [%s] health check:' % self.id)
+                if self.exec_time >= HEALTH_CHECK_EXEC_TIME_RUNNING:
+                    self.status_code = SERVICE_RUNNING
+                else:
+                    self.status_code = SERVICE_ERROR
             else:
-                self.status_code = SERVICE_ERROR
+                self.exec_time = HEALTH_CHECK_EXEC_TIME_RUNNING
+                self.status_code = SERVICE_RUNNING
+        elif health_check.has_key('http'):
+            url = health_check.get('http', '')
+            if url:
+                http_get(url, timeout=timeout, show_message=False,
+                         discription='In [%s] health check:' % self.id)
+            else:
+                self.exec_time = HEALTH_CHECK_EXEC_TIME_RUNNING
+                self.status_code = SERVICE_RUNNING
         else:
             self.exec_time = HEALTH_CHECK_EXEC_TIME_RUNNING
             self.status_code = SERVICE_RUNNING
@@ -324,10 +367,12 @@ class Container(ComposeService):
         if self.status_code in [SERVICE_UNDEPLOYED, SERVICE_STOP]:
             logging.error('[%s] is [%s].' % (self.id, self.status))
             return
-        print Color('{autored}#####In [%s] Container#####{/autored}'%(self.id))
+        print Color(
+            '{autored}#####In [%s] Container#####{/autored}' % (self.id))
         cmd = '%s exec %s sh' % (self.base_cmd, self.id)
         subprocesscmd(cmd, env={'DOCKER_HOST': self.hostip})
-        print Color('{autored}#####Out [%s] Container#####{/autored}'%(self.id))
+        print Color(
+            '{autored}#####Out [%s] Container#####{/autored}' % (self.id))
 
     def rm(self, force=False):
         if not self.check_client('In rm'):
@@ -375,7 +420,7 @@ class Container(ComposeService):
 
         try:
             container_inspect = self.client.inspect_container(self.containerid)
-        except :
+        except:
             imageid = self.image
         else:
             imageid = container_inspect.get('Image')
@@ -383,17 +428,17 @@ class Container(ComposeService):
         try:
             data = self.client.inspect_image(imageid)
         except:
-            return ImageInspect(service=self.id,image=self.image)()
+            return ImageInspect(service=self.id, image=self.image)()
         else:
             return ImageInspect(service=self.id, image=self.image, **data)()
 
     def tag(self, suffix):
         index = self.image.rfind(':')
         _repository = self.image[:index]
-        _tag = self.image[index+1:]+suffix
-        print 'Tagging %s => %s:%s ...'%(self.image, _repository,_tag)
+        _tag = self.image[index + 1:] + suffix
+        print 'Tagging %s => %s:%s ...' % (self.image, _repository, _tag)
         try:
-            self.client.tag(image=self.image,repository=_repository, tag=_tag)
+            self.client.tag(image=self.image, repository=_repository, tag=_tag)
         except Exception as e:
             print e.message
             return False
@@ -403,20 +448,24 @@ class Container(ComposeService):
     def push(self, suffix):
         index = self.image.rfind(':')
         _repository = self.image[:index]
-        _tag = self.image[index+1:]+suffix
+        _tag = self.image[index + 1:] + suffix
         message = self.id
         # print 'Pushing %s:%s ...'%(_repository,_tag)
         try:
             # print 'push is running. please wait...'
-            for _result in self.client.push(repository=_repository,tag=_tag, stream=True):
-                r=eval(_result)
+            for _result in self.client.push(repository=_repository, tag=_tag,
+                                            stream=True):
+                r = eval(_result)
                 try:
-                    message += " => "+r['aux']['Digest']
-                except:pass
+                    message += " => " + r['aux']['Digest']
+                except:
+                    pass
 
                 try:
-                    message += " => "+Color("{autored}%s{/autored}"%r['error'])
-                except: pass
+                    message += " => " + Color(
+                        "{autored}%s{/autored}" % r['error'])
+                except:
+                    pass
 
         except Exception as e:
             print e
