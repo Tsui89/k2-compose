@@ -1,44 +1,43 @@
-import os
-import time
-import requests
-import signal
 import logging
+import os
+import signal
 import subprocess
+import time
 
-from docker import errors
-from ..service.service import ComposeService
-from ..common.common import *
-from ..k2cutils.class_utils import cached_property
-from ..image.image_history import ImageHistory
-from ..compose_utils.confirm_input import confirm_input
-from ..image.image_show import ImageInspect
-
+import requests
 from colorclass import Color
+from docker import errors
+
+from ..common.common import *
+from ..compose_utils.confirm_input import confirm_input
+from ..image.image_history import ImageHistory
+from ..image.image_show import ImageInspect
+from ..k2cutils.class_utils import cached_property
+from ..service.service import ComposeService
 
 
-def http_get(url, timeout=None, discription=None, show_message=True):
+def http_get(url, timeout=None, description=None, show_message=True):
     _time_begin = time.time()
     url = url if url.startswith('http://') or url.startswith(
         'https://') else 'http://' + url
     try:
-        resp = requests.get(url, timeout)
+        resp = requests.get(url, timeout=timeout)
     except Exception as e:
-        logging.error(e.message)
+        logging.error("%s %s"%(description,e.message))
         return HEALTH_CHECK_EXEC_TIME_ERROR
 
-    _exec_time = (time.time() - _time_begin) * 1000  # ms
-    if DEBUG:
-        logging.info("%s %s"%(discription, resp.text))
+    _exec_time = int((time.time() - _time_begin) * 1000)  # ms
+    logging.debug("%s %s" % (description, resp.text))
     if resp.status_code == 200:
         return _exec_time
     else:
         return -_exec_time
 
 
-def subprocesscmd(cmd_str='', timeout=None, discription='', env=os.environ,
+def subprocesscmd(cmd_str='', timeout=None, description='', env=os.environ,
                   show_message=True):
     logging.debug('%s DOCKER_HOST=%s %s ' % (
-        discription, env.get('DOCKER_HOST'), cmd_str))
+        description, env.get('DOCKER_HOST'), cmd_str))
     poll_time = 0.2
     _time_begin = time.time()
     if show_message:
@@ -51,7 +50,7 @@ def subprocesscmd(cmd_str='', timeout=None, discription='', env=os.environ,
         ret = subprocess.Popen(cmd_str, stdout=stdout, stderr=stderr,
                                shell=True, env=env)
     except OSError as e:
-        logging.error('%s %s %s %s' % (discription, e, cmd_str, str(env)))
+        logging.error('%s %s %s %s' % (description, e, cmd_str, str(env)))
         return HEALTH_CHECK_EXEC_TIME_ERROR
     try:
         if timeout:
@@ -65,21 +64,21 @@ def subprocesscmd(cmd_str='', timeout=None, discription='', env=os.environ,
         logging.error('Aborted by user.')
         return HEALTH_CHECK_EXEC_TIME_ERROR
 
-    _exec_time = (time.time() - _time_begin) * 1000  # ms
+    _exec_time = int((time.time() - _time_begin) * 1000)  # ms
 
     if ret.poll() is None:
         ret.send_signal(signal.SIGINT)
         logging.error(
-            '%s : Exec [%s] overtime.' % (discription, cmd_str))
+            '%s : Exec [%s] overtime.' % (description, cmd_str))
         return -_exec_time
 
     if not show_message:
         for line in ret.stdout:
             if line:
-                logging.info('%s %s' % (discription, line.strip('\n')))
+                logging.info('%s %s' % (description, line.strip('\n')))
         for line in ret.stderr:
             if line:
-                logging.error('%s %s' % (discription, line.strip('\n')))
+                logging.error('%s %s' % (description, line.strip('\n')))
 
     if ret.returncode == 0:
         return _exec_time
@@ -133,7 +132,7 @@ class Container(ComposeService):
             return
         cmd = '%s ps %s' % (self.base_cmd, self.id)
         subprocesscmd(cmd, env={'DOCKER_HOST': self.hostip},
-                      discription='ps detail:', show_message=False)
+                      description='ps detail:', show_message=False)
 
     def stats(self):
         try:
@@ -225,32 +224,32 @@ class Container(ComposeService):
             return
 
         health_check = self.health_check
-
+        #health check , set exec_time
         timeout = health_check.get('timeout', 10)
         if health_check.has_key('shell'):
             cmd = health_check.get('shell', '')
 
             if cmd:
                 self.exec_time = subprocesscmd(cmd, timeout, show_message=False,
-                                               discription='In [%s] health check:' % self.id)
-                if self.exec_time >= HEALTH_CHECK_EXEC_TIME_RUNNING:
-                    self.status_code = SERVICE_RUNNING
-                else:
-                    self.status_code = SERVICE_ERROR
+                                               description='In [%s] health check:' % self.id)
+
             else:
                 self.exec_time = HEALTH_CHECK_EXEC_TIME_RUNNING
-                self.status_code = SERVICE_RUNNING
         elif health_check.has_key('http'):
             url = health_check.get('http', '')
             if url:
-                http_get(url, timeout=timeout, show_message=False,
-                         discription='In [%s] health check:' % self.id)
+                self.exec_time = http_get(url, timeout=timeout, show_message=False,
+                                          description='In [%s] health check:' % self.id)
             else:
                 self.exec_time = HEALTH_CHECK_EXEC_TIME_RUNNING
-                self.status_code = SERVICE_RUNNING
         else:
             self.exec_time = HEALTH_CHECK_EXEC_TIME_RUNNING
+
+        #set container status_code
+        if self.exec_time >= HEALTH_CHECK_EXEC_TIME_RUNNING:
             self.status_code = SERVICE_RUNNING
+        else:
+            self.status_code = SERVICE_ERROR
 
         self.status = CONTAINER_STATUS[self.status_code]
         self.color = COLOR[self.status_code]
@@ -413,7 +412,8 @@ class Container(ComposeService):
         container_instance.ps_container()
         container_instance.healthcheck()
         container_instance.ps_image()
-        if DEBUG:
+        from ..common.common import get_debug
+        if get_debug():
             container_instance.ps()
 
     def image_label(self):

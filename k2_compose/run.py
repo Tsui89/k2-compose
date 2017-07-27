@@ -13,7 +13,7 @@ import logging
 # from docker import  errors
 
 from k2_compose.compose_utils.basenode import DependsOn, RunsOn
-# from common.common import *
+from common.common import set_debug,get_debug
 from k2_compose.compose_file.compose_file import ComposeConcrete, ComposeFile
 
 logging.basicConfig(format='%(levelname)s: %(message)s',
@@ -314,8 +314,7 @@ class Cmdline:
         if args.debug:
             logging.getLogger().setLevel(logging.DEBUG)
             logging.debug("debug mode enabled")
-            global DEBUG
-            DEBUG = True
+            set_debug()
         # env(args)
         return args
 

@@ -723,7 +723,7 @@ class ComposeConcrete(ComposeFile):
                                 preffix=preffix,host=host_name, deployment=self.project)
 
         for service_name,container in self._containers.items():
-            print self._message("container.%s"%(service_name),container.exec_time,
+            print self._message("containers.%s"%(service_name),container.exec_time,
                                 preffix=preffix,host=container.hostname, deployment=self.project)
 
     @classmethod

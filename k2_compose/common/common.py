@@ -36,3 +36,11 @@ DEBUG = False
 
 from os import getenv
 DOCKER_API_VERSION = getenv('DOCKER_API_VERSION', '1.23')
+
+import globalVar
+
+def set_debug():
+    globalVar.set_debug()
+
+def get_debug():
+    return globalVar.get_debug()
