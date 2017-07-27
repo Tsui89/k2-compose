@@ -714,17 +714,17 @@ class ComposeConcrete(ComposeFile):
             print table_instance.table
         return
 
-    def agent(self, services=None, preffix='default'):
+    def agent(self, services=None, deployment=None):
         # services = self.check_service(services)
         self.ps(services,ignore_deps=True)
-
+        _deployment = deployment if deployment else self.project
         for host_name,host_instance in self.hosts_instance.items():
-            print self._message("hosts.%s"%(host_name), host_instance.status_code,
-                                preffix=preffix,host=host_name, deployment=self.project)
+            print self._message("%s.hosts.%s"%(_deployment,host_name), host_instance.status_code,
+                                host=host_name)
 
         for service_name,container in self._containers.items():
-            print self._message("containers.%s"%(service_name),container.exec_time,
-                                preffix=preffix,host=container.hostname, deployment=self.project)
+            print self._message("%s.containers.%s"%(_deployment,service_name),container.exec_time,
+                                host=container.hostname)
 
     @classmethod
     def _message(cls, name, value, **kwargs):
