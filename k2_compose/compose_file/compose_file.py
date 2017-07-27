@@ -735,4 +735,4 @@ class ComposeConcrete(ComposeFile):
         return "put {name} {now} {value} {tags}".format(name=name,
                                                           now=now,
                                                           value=value,
-                                                          tags=','.join(tags))
+                                                          tags=' '.join(tags))
