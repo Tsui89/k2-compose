@@ -368,8 +368,11 @@ class Container(ComposeService):
             return
         print Color(
             '{autored}#####In [%s] Container#####{/autored}' % (self.id))
-        cmd = '%s exec %s sh' % (self.base_cmd, self.id)
-        subprocesscmd(cmd, env={'DOCKER_HOST': self.hostip})
+        cmd = '%s exec %s bash' % (self.base_cmd, self.id)
+        if subprocesscmd(cmd, env={'DOCKER_HOST': self.hostip}) <0 :
+            #use sh
+            cmd = '%s exec %s sh' % (self.base_cmd, self.id)
+            subprocesscmd(cmd, env={'DOCKER_HOST': self.hostip})
         print Color(
             '{autored}#####Out [%s] Container#####{/autored}' % (self.id))
 
