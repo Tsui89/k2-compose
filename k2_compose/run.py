@@ -272,7 +272,7 @@ class K2Platform:
     def agent(cls, args):
         logging.debug('k2-compose_file agent')
 
-        sleep_time = args.interval if args.interval else 30
+        sleep_time = int(args.interval) if args.interval else 30
         while True:
             try:
                 k2compose = K2ComposeCMD(ComposeConcrete(filename=args.file, url=args.url))
