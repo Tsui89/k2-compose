@@ -347,16 +347,16 @@ class ComposeConcrete(ComposeFile):
             host = self.get_host_instance_by_container_id(service)
             image_status = ''
 
-            host_color = "{%s}%s{/%s}" % (
+            host_color = "{autobgwhite}{%s}%s{/%s}{/autobgwhite}" % (
                 host.color, container.hostip, host.color)
-            container_color = "{%s}%s{/%s}" % (
+            container_color = "{autobgwhite}{%s}%s{/%s}{/autobgwhite}" % (
                 container.color, container.status, container.color)
             if container._image_status == 'changed':
                 image_status = container._image_status
             depends = ''
             for depend in container.s_depends_on:
                 depend_container = self.get_container_instance_by_service_name(depend)
-                depend_container_color = "- {%s}%s{/%s}\n" % (
+                depend_container_color = "- {autobgwhite}{%s}%s{/%s}{/autobgwhite}\n" % (
                     depend_container.color, depend, depend_container.color)
                 depends += (Color(depend_container_color))
             depends = depends.strip('\n')
@@ -728,7 +728,7 @@ class ComposeConcrete(ComposeFile):
 
     @classmethod
     def _message(cls, name, value, **kwargs):
-        now = time.time() * 1000 # ms
+        now = time.time()# ms
         tags = []
         for k,v in kwargs.items():
             tags.append("%s=%s"%(k,str(v)))

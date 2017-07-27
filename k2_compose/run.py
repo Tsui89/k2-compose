@@ -511,6 +511,8 @@ class Cmdline:
     def agent(cls, cs, parser):
         parser.add_argument('--interval', default=30,
                             help='sleep time between to check group (not exactly sample interval)')
+        parser.add_argument('--deployment', default=30,
+                            help='sleep time between to check group (not exactly sample interval)')
         parser.add_argument(
             'services',
             nargs='*',

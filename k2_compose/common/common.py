@@ -1,11 +1,11 @@
 [SERVICE_UNDEPLOYED, SERVICE_STOP, SERVICE_ERROR, SERVICE_RUNNING] = [i for i in range(4)]
 CONTAINER_STATUS = ['undeployed', 'stopped', 'error', 'running']
-COLOR = ['autobgblack', 'autobgred', 'autobgyellow', 'autobggreen']
+COLOR = ['autoblack', 'autored', 'autoyellow', 'autogreen']
 
 
 [HOST_DISCONNECT, HOST_CONNECT] = [i for i in range(2)]
 HOST_STATUS = ['stopped', 'running']
-COLOR_HOST = ['autobgred', 'autobggreen']
+COLOR_HOST = ['autored', 'autogreen']
 
 
 HOSTS_KEY = "hosts"
