@@ -1,3 +1,0 @@
-include README.rst
-include PKG-INFO
-recursive-include tests *.yml
