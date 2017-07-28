@@ -1,3 +1,12 @@
+---
+layout: post
+comments: true
+title:  "k2-compose Manuals"
+date:   2017-07-11 01:01:19 +0800
+categories: jekyll update
+---
+
+#### 最新版本0.0.9rc6
 
 #### 简介
 k2-compose集成了docker-compose==1.14.0的基础功能，包括
@@ -6,13 +15,15 @@ k2-compose集成了docker-compose==1.14.0的基础功能，包括
 
 优化增加了以下功能
 
-	inspect、ps、bash、show、save、agent
+	inspect、ps、bash、show、save
 
 配置文件支持docker-compose原生、k2-compose定制化，这两种配置文件格式。
 
 安装：
 
 pip install k2-compose
+
+最新版本： sudo pip install k2-compose==0.0.9rc6 -i pypi.douban.com/simple
 
 项目地址：[https://github.com/Tsui89/k2-compose](https://github.com/Tsui89/k2-compose)
 
@@ -50,7 +61,7 @@ services:
     image: busybox:latest
     host: as
     health_check:
-      shell: echo "err." && exit 1
+      http: www.baidu.com
       timeout: 10
     entrypoint: ["ping", "localhost"]
     s_depends_on:
@@ -67,9 +78,10 @@ services:
 |services.service.s\_depends\_on|依赖的容器列表|array|false|空|
 |services.service.health\_check|健康检查命令属性|object|false|空（健康）|
 |services.service.health\_check.shell|检查命令shell格式|string or string数组|false
+|services.service.health\_check.http|检查httpGet返回值|URL|false
 |services.service.health\_check.timeout|检查命令超时时间|int(单位s)|false|10|
 
-
+health_check中shell/http二选一。
 ### 操作示例
 注
 
@@ -90,13 +102,14 @@ show 有两种状态，
 
 ```
 root@minion1:~/k2-compose-0.0.4rc2/tests# k2-compose -f k2-compose.yml show
-┌k2-compose.yml──────────┬────────────┐
-│ host  │ dockerHost     │ services   │
-├───────┼────────────────┼────────────┤
-│ as    │ localhost:4243 │ - busybox2 │
-├───────┼────────────────┼────────────┤
-│ local │ 127.0.0.1:4243 │ - busybox1 │
-└───────┴────────────────┴────────────┘
+┌k2-compose.yml────────────┬────────────┐
+│ host    │ dockerHost     │ services   │
+├─────────┼────────────────┼────────────┤
+│ as      │ localhost:4243 │ - busybox2 │
+├─────────┼────────────────┼────────────┤
+│ default │ 127.0.0.1:4243 │ - busybox1 │
+└─────────┴────────────────┴────────────┘
+
 root@minion1:~/k2-compose-0.0.4rc2/tests# k2-compose -f k2-compose.yml show busybox1
 ┌busybox1──────┬─────────────────────────────┐
 │ entrypoint   │ - ping                      │
@@ -336,8 +349,22 @@ root@minion1:~/k2-compose-0.0.4rc2/tests# k2-compose -f k2-compose.yml ps
 +----------+----------------+----------------+--------------+------------+-------+--------------+
 ```
 
+#### agent
+检查host、container状态，并按Telnet API模式打印在终端上，后续有opentsd client处理。
 
+[Writing Data to OpenTSDB](http://opentsdb.net/docs/build/html/user_guide/writing.html)
+
+```
+$ k2-compose  -f tests/k2-compose.yml agent --interval 3
+put hosts.default 1.5011261104e+12 1 host=default deployment=k2composetest preffix=default
+put hosts.as 1.5011261104e+12 1 host=as deployment=k2composetest preffix=default
+put containers.busybox2 1.5011261104e+12 142 host=as deployment=k2composetest preffix=default
+put containers.busybox1 1.5011261104e+12 210 host=default deployment=k2composetest preffix=default
+put hosts.default 1.50112611382e+12 1 host=default deployment=k2composetest preffix=default
+put hosts.as 1.50112611382e+12 1 host=as deployment=k2composetest preffix=default
+put containers.busybox2 1.50112611382e+12 101 host=as deployment=k2composetest preffix=default
+put containers.busybox1 1.50112611382e+12 209 host=default deployment=k2composetest preffix=default
+
+```
 
 ### Troubleshooting
-
-1. 安装过程中由于docker-compose==1.7.1要求的requests>=2.6 <2.8,如果本地requests版本不对，需要先重新安装requests: pip install requests==2.7
