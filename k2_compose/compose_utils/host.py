@@ -31,14 +31,24 @@ def host_connect(host_instance=None):
 
 
 def is_open(docker_host):
-    host_ip, host_port = docker_host.split(':')
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        s.connect((host_ip, int(host_port)))
-        s.shutdown(2)
-        return True
-    except Exception:
-        return False
+    if docker_host.startswith("unix://"):
+        docker_host=docker_host.replace('unix://', '')
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            s.connect(docker_host)
+            s.shutdown(2)
+            return True
+        except Exception as e:
+            return False
+    else:
+        host_ip, host_port = docker_host.split(':')
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.connect((host_ip, int(host_port)))
+            s.shutdown(2)
+            return True
+        except Exception:
+            return False
 
 
 class Host(Node):
