@@ -1,10 +1,3 @@
----
-layout: post
-comments: true
-title:  "k2-compose Manuals"
-date:   2017-07-11 01:01:19 +0800
-categories: jekyll update
----
 
 #### 最新版本0.0.9rc6
 
