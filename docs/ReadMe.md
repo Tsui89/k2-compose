@@ -1,10 +1,4 @@
----
-layout: post
-comments: true
-title:  "k2-compose Manuals"
-date:   2017-07-11 01:01:19 +0800
-categories: jekyll update
----
+
 
 #### 简介
 k2-compose集成了docker-compose==1.14.0的基础功能，包括
