@@ -276,7 +276,7 @@ class K2Platform:
         while True:
             try:
                 k2compose = K2ComposeCMD(ComposeConcrete(filename=args.file, url=args.url))
-                k2compose.agent(services=args.services,deployment=args.deployment)
+                k2compose.agent(services=args.services,prefix=args.prefix)
             except KeyboardInterrupt:
                 break
             try:
@@ -511,7 +511,7 @@ class Cmdline:
     def agent(cls, cs, parser):
         parser.add_argument('--interval', default=30,
                             help='sleep time between to check group (not exactly sample interval)')
-        parser.add_argument('--deployment', help='deployment name')
+        parser.add_argument('--prefix', help='prefix of Metric')
         parser.add_argument(
             'services',
             nargs='*',

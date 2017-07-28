@@ -1,26 +1,26 @@
+import copy
+import logging
 import os
 import re
 import sys
-import yaml
-import requests
-import logging
-import copy
-
-
-from ..compose_utils.toposort import toposort
-from ..compose_utils.confirm_input import confirm_input
-from ..service.service import ComposeService
-from ..compose_utils.host import Host, host_connect
-from ..container.container import Container
-from ..k2cutils.class_utils import cached_property
-from ..image.image_show import ImageInspect
-from ..common.common import *
-
+import time
 from multiprocessing.dummy import Pool as ThreadPool
-from terminaltables import SingleTable, AsciiTable
+
+import requests
+import yaml
 from colorclass import Color
 from pick import pick
-import time
+from terminaltables import SingleTable, AsciiTable
+
+from ..common.common import *
+from ..compose_utils.confirm_input import confirm_input
+from ..compose_utils.host import Host, host_connect
+from ..compose_utils.toposort import toposort
+from ..container.container import Container
+from ..image.image_show import ImageInspect
+from ..k2cutils.class_utils import cached_property
+from ..service.service import ComposeService
+
 
 def check_compose_file(filename):
     if not os.path.isfile(filename):
@@ -32,7 +32,7 @@ def check_compose_file(filename):
         # print compose_data
     except Exception as e:
         # logging.error(e)
-        logging.error("Yaml format error, %s"%e)
+        logging.error("Yaml format error, %s" % e)
         return False
 
     return True
@@ -40,11 +40,11 @@ def check_compose_file(filename):
 
 class ComposeFile(object):
     def __init__(self, **kwargs):
-        self.stream=None
-        self.stream_name=''
+        self.stream = None
+        self.stream_name = ''
         self._safe_load(**kwargs)
 
-        self.project= filter(str.isalnum, self.get_project())
+        self.project = filter(str.isalnum, self.get_project())
         self.docker_compose_file = '.%s-compose.yml' % (self.project)
 
         self.sorted_services = self.sort()
@@ -97,9 +97,9 @@ class ComposeFile(object):
     @cached_property
     def hosts(self):
         try:
-            data =  self.stream.get('hosts',{})
+            data = self.stream.get('hosts', {})
             docker_host = os.getenv("DOCKER_HOST", DOCKER_HOST_DEFAULT)
-            data.update({'default':docker_host})
+            data.update({'default': docker_host})
             return data
         except KeyError:
             return {}
@@ -133,16 +133,16 @@ class ComposeFile(object):
         tmp_services = []
         re_services = {}
 
-        match_record={}
+        match_record = {}
         for s in services:
-            match_record.update({s:0})
+            match_record.update({s: 0})
 
         if services:
-            #compile regular
+            # compile regular
             for service in services:
                 tmp = service.replace('*', '.*')
                 if re.search(r'\[\d-\d\]$', tmp) or '*' in tmp:
-                    re_services.update({service:re.compile(r'%s'%tmp)})
+                    re_services.update({service: re.compile(r'%s' % tmp)})
 
             for service in self.sorted_services:
 
@@ -150,7 +150,7 @@ class ComposeFile(object):
                     tmp_services.append(service)
                     match_record[service] = match_record.get(service, 0) + 1
 
-                for s,re_s in re_services.items():
+                for s, re_s in re_services.items():
                     if re_s.match(service):
                         if service not in tmp_services:
                             tmp_services.append(service)
@@ -158,19 +158,19 @@ class ComposeFile(object):
                         else:
                             match_record[s] = match_record.get(s, 0) + 1
         else:
-                tmp_services.extend(self.sorted_services)
-        for s,s_match in match_record.items():
+            tmp_services.extend(self.sorted_services)
+        for s, s_match in match_record.items():
             if s_match == 0:
-                logging.error('%s %s not match any service in YML.'%(msg,s))
+                logging.error('%s %s not match any service in YML.' % (msg, s))
 
-        logging.debug("%s Match Results: %s"%(msg, match_record))
+        logging.debug("%s Match Results: %s" % (msg, match_record))
         # return set(tmp_services)
         return tmp_services
 
     def show(self, services=None):
 
         if services:
-            services = self.check_service(services,msg='In SHOW:')
+            services = self.check_service(services, msg='In SHOW:')
             for service in services:
                 service_instance = ComposeService(id=service,
                                                   service=self.services.get(
@@ -244,25 +244,24 @@ class ComposeConcrete(ComposeFile):
             if key in stream_tmp:
                 stream_tmp.pop(key)
 
-        #load extra_hosts
+        # load extra_hosts
         _extra_hosts = {}
         if stream_tmp.has_key(S_EXTRA_HOSTS):
-            _extra_hosts=stream_tmp.pop(S_EXTRA_HOSTS)
+            _extra_hosts = stream_tmp.pop(S_EXTRA_HOSTS)
 
-        for service_name,service in stream_tmp['services'].items():
+        for service_name, service in stream_tmp['services'].items():
             for key in parse_key:
                 if service.has_key(key):
                     service.pop(key)
 
-            if self.driver == 'bridge' and service.get('network_mode','') != 'host':
+            if self.driver == 'bridge' and service.get('network_mode', '') != 'host':
                 if not service.has_key('extra_hosts'):
-                    service['extra_hosts']={}
+                    service['extra_hosts'] = {}
                 service['extra_hosts'].update(_extra_hosts)
 
-            # extra_hosts = service.get('extra_hosts',{})
-            # extra_hosts.update(_extra_hosts)
+                # extra_hosts = service.get('extra_hosts',{})
+                # extra_hosts.update(_extra_hosts)
         yaml.safe_dump(stream_tmp, open(self.docker_compose_file, 'w+'), default_flow_style=False, width=float("inf"))
-
 
     def build_host(self, id='default'):
         try:
@@ -272,12 +271,12 @@ class ComposeConcrete(ComposeFile):
 
     def build_service(self, id=''):
 
-        service = ComposeService(id,self.get_service(id))
+        service = ComposeService(id, self.get_service(id))
         hostip = self.get_host_ip_by_hostname(service.hostname)
-        
+
         try:
-            container = Container(id=id, service=self.get_service(id), hostip=hostip, project = self.project,
-                                  docker_compose_file = self.docker_compose_file)
+            container = Container(id=id, service=self.get_service(id), hostip=hostip, project=self.project,
+                                  docker_compose_file=self.docker_compose_file)
         except KeyError:
             return None
         else:
@@ -363,14 +362,14 @@ class ComposeConcrete(ComposeFile):
 
             ports = ''
             for port in container.ports:
-                ports += "- %s\n"%port
+                ports += "- %s\n" % port
             ports = ports.strip('\n')
 
             nm = default_network if container.network_mode == '' else container.network_mode
 
             table_data.append([container.id, Color(host_color),
                                Color(container_color), image_status,
-                               depends,ports, nm])
+                               depends, ports, nm])
 
         table_instance = AsciiTable(table_data)
 
@@ -524,13 +523,13 @@ class ComposeConcrete(ComposeFile):
         _results_async = []
         pool = ThreadPool(len(self.services))
 
-        services_list = self.check_service(services,msg='In Inspect:')
+        services_list = self.check_service(services, msg='In Inspect:')
         for service_name in services_list:
             host = self.get_host_instance_by_container_id(service_name)
-            service = ComposeService(service_name,self.get_service(service_name))
+            service = ComposeService(service_name, self.get_service(service_name))
 
             if host.status != 'running':
-                _results.append(ImageInspect(service=service_name,image=service.image)())
+                _results.append(ImageInspect(service=service_name, image=service.image)())
                 continue
             else:
                 container = self.get_container_instance_by_service_name(service_name)
@@ -539,7 +538,7 @@ class ComposeConcrete(ComposeFile):
         pool.join()
         for r in _results_async:
             _results.append(r.get())
-        _results.sort(key=lambda obj:obj.get('image'),reverse=False)
+        _results.sort(key=lambda obj: obj.get('image'), reverse=False)
 
         if not merge:
             return _results
@@ -549,7 +548,7 @@ class ComposeConcrete(ComposeFile):
             key = r['image'] + str(r['Id']) + r['Match']
             if not _show_tmp.has_key(key):
                 _show_tmp[key] = {
-                    'image':r['image'],
+                    'image': r['image'],
                     'service': r['service'],
                     'Id': r['Id'],
                     'Created': r['Created'],
@@ -557,7 +556,7 @@ class ComposeConcrete(ComposeFile):
                     'Match': r['Match']
                 }
             else:
-                _show_tmp[key]['service'] += '\n'+r['service']
+                _show_tmp[key]['service'] += '\n' + r['service']
         return _show_tmp
 
     def inspect(self, services=None):
@@ -568,7 +567,7 @@ class ComposeConcrete(ComposeFile):
         table_data.append(['Image', 'Service', 'Image-Id', 'Created', 'Labels'])
 
         for key in sorted(_show_tmp.keys()):
-            table_data.append([_show_tmp[key]['image']+'\n'+_show_tmp[key]['Match'], _show_tmp[key]['service'],
+            table_data.append([_show_tmp[key]['image'] + '\n' + _show_tmp[key]['Match'], _show_tmp[key]['service'],
                                _show_tmp[key]['Id'], _show_tmp[key]['Created'], _show_tmp[key]['Labels']])
         table_instance.inner_heading_row_border = False
         table_instance.inner_row_border = True
@@ -591,21 +590,25 @@ class ComposeConcrete(ComposeFile):
 
         title = '\n  {image:<{longest_image}} | {service:<{longest_service}} | {imageid:<{longest_imageId}} | {match:<{longest_match}}' \
                 '\n  {ind:-<{wedth}}'.format(
-                    image='Image', service='Service', imageid='Image-Id',match='Match',
-                    longest_image=longest_image, longest_service=longest_service, longest_imageId=longest_imageId, longest_match=longest_match,
-                    ind='-',wedth=longest_image+longest_service+longest_imageId+longest_match+9)
+            image='Image', service='Service', imageid='Image-Id', match='Match',
+            longest_image=longest_image, longest_service=longest_service, longest_imageId=longest_imageId,
+            longest_match=longest_match,
+            ind='-', wedth=longest_image + longest_service + longest_imageId + longest_match + 9)
 
         for v in _show:
-            table_data.append('{image:<{longest_image}} | {service:<{longest_service}} | {imageid:<{longest_imageId}} | {match:<{longest_match}}'.format(
-                image=v['image'],service=v['service'],imageid=v['Id'], match=v['Match'],longest_image=longest_image,
-                longest_service=longest_service, longest_imageId=longest_imageId, longest_match=longest_match))
+            table_data.append(
+                '{image:<{longest_image}} | {service:<{longest_service}} | {imageid:<{longest_imageId}} | {match:<{longest_match}}'.format(
+                    image=v['image'], service=v['service'], imageid=v['Id'], match=v['Match'],
+                    longest_image=longest_image,
+                    longest_service=longest_service, longest_imageId=longest_imageId, longest_match=longest_match))
 
         selected_service = []
         if no_interaction:
             selected_service.extend(_show)
         else:
             try:
-                selected = pick(table_data, 'Please choose your images for save (press SPACE to mark, ENTER to continue, Ctrl+C to exit): ' + title,
+                selected = pick(table_data,
+                                'Please choose your images for save (press SPACE to mark, ENTER to continue, Ctrl+C to exit): ' + title,
                                 indicator='*', multi_select=True, min_selection_count=0)
             except KeyboardInterrupt:
                 return
@@ -619,7 +622,7 @@ class ComposeConcrete(ComposeFile):
         # confirm_input(msg='Select these images.')
 
         print 'List:'
-        _skip=False
+        _skip = False
         not_ready = []
 
         for s in selected_service:
@@ -635,14 +638,16 @@ class ComposeConcrete(ComposeFile):
 
             s['Action'] = _action
             if _action == 'do':
-                _action = Color('{autogreen}%s{/autogreen}'%(_action))
+                _action = Color('{autogreen}%s{/autogreen}' % (_action))
             else:
-                _action = Color('{autored}%s{/autored}'%(_action))
+                _action = Color('{autored}%s{/autored}' % (_action))
                 not_ready.append(s)
             print '{action:<25} {image_old:<{longest_image}} => {image_new:<{longest_image}}'.format(action=_action,
-                                                                                        longest_image=longest_image,
-                                                                                        image_old=s['image'],
-                                                                                        image_new=s['image']+suffix)
+                                                                                                     longest_image=longest_image,
+                                                                                                     image_old=s[
+                                                                                                         'image'],
+                                                                                                     image_new=s[
+                                                                                                                   'image'] + suffix)
         if only_tag:
             _msg = 'Tag these images.'
         elif only_push:
@@ -667,8 +672,8 @@ class ComposeConcrete(ComposeFile):
                 print table_instance.table
                 sys.exit(-1)
             else:
-                _msg +=  Color('\n{autored}Some service`s image is not ready. \n' \
-                       'You can use k2-compose pull/up to fix it, otherwise these images will be skipped.{/autored}\n')
+                _msg += Color('\n{autored}Some service`s image is not ready. \n' \
+                              'You can use k2-compose pull/up to fix it, otherwise these images will be skipped.{/autored}\n')
                 confirm_input(msg=_msg)
 
         if not only_push:
@@ -699,7 +704,7 @@ class ComposeConcrete(ComposeFile):
             print "#".join(['Image', 'Service', 'Image-Id', 'Created', 'Labels'])
             for s in selected_service:
                 print "#".join((s['image'], s['service'],
-                     s['Id'], s['Created'], s['Labels'].replace('\n',' ')))
+                                s['Id'], s['Created'], s['Labels'].replace('\n', ' ')))
         else:
             table_data = []
             table_instance = SingleTable(table_data, 'Done')
@@ -714,25 +719,30 @@ class ComposeConcrete(ComposeFile):
             print table_instance.table
         return
 
-    def agent(self, services=None, deployment=None):
+    def agent(self, services=None, prefix=None):
         # services = self.check_service(services)
-        self.ps(services,ignore_deps=True)
-        _deployment = deployment if deployment else self.project
-        for host_name,host_instance in self.hosts_instance.items():
-            print self._message("%s.hosts.%s"%(_deployment,host_name), host_instance.status_code,
+        self.ps(services, ignore_deps=True)
+        _deployment = self.project
+        if prefix:
+            _prefix = prefix if prefix.endswith('.') else prefix + '.'
+        else:
+            _prefix = ""
+
+        for host_name, host_instance in self.hosts_instance.items():
+            print self._message("%s%s.hosts.%s" % (_prefix, _deployment, host_name), host_instance.status_code,
                                 host=host_name)
 
-        for service_name,container in self._containers.items():
-            print self._message("%s.containers.%s"%(_deployment,service_name),container.exec_time,
-                                host=container.hostname)
+        for service_name, container in self._containers.items():
+            print self._message("%s%s.containers.%s" % (_prefix, _deployment, service_name), container.exec_time,
+                                host=container.hostname, container=service_name)
 
     @classmethod
     def _message(cls, name, value, **kwargs):
-        now = time.time()# ms
+        now = time.time()  # ms
         tags = []
-        for k,v in kwargs.items():
-            tags.append("%s=%s"%(k,str(v)))
+        for k, v in kwargs.items():
+            tags.append("%s=%s" % (k, str(v)))
         return "put {name} {now} {value} {tags}".format(name=name,
-                                                          now=now,
-                                                          value=value,
-                                                          tags=' '.join(tags))
+                                                        now=now,
+                                                        value=value,
+                                                        tags=' '.join(tags))
