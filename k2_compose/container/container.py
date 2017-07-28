@@ -37,7 +37,10 @@ def http_get(url, timeout=None, description=None, show_message=True):
 def subprocesscmd(cmd_str='', timeout=None, description='', env=os.environ,
                   show_message=True):
     logging.debug('%s DOCKER_HOST=%s %s ' % (
-        description, env.get('DOCKER_HOST'), cmd_str))
+        description, env.get('DOCKER_HOST',DOCKER_HOST_DEFAULT), cmd_str))
+
+    os_env = os.environ
+    env = os_env.update(env)
     poll_time = 0.2
     _time_begin = time.time()
     if show_message:

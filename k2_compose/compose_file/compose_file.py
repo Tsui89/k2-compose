@@ -98,7 +98,7 @@ class ComposeFile(object):
     def hosts(self):
         try:
             data =  self.stream.get('hosts',{})
-            docker_host = os.getenv("DOCKER_HOST", "127.0.0.1:4243")
+            docker_host = os.getenv("DOCKER_HOST", DOCKER_HOST_DEFAULT)
             data.update({'default':docker_host})
             return data
         except KeyError:
@@ -321,7 +321,7 @@ class ComposeConcrete(ComposeFile):
                 continue
             pool_containers.append(self.get_container_instance_by_service_name(service))
         if services and len(pool_containers) > 0:
-            pool = ThreadPool(len(services))
+            pool = ThreadPool(len(pool_containers))
             pool.map(Container.ps_thread, pool_containers)
             pool.close()
             pool.join()

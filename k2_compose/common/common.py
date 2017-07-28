@@ -37,6 +37,8 @@ DEBUG = False
 from os import getenv
 DOCKER_API_VERSION = getenv('DOCKER_API_VERSION', '1.23')
 
+DOCKER_HOST_DEFAULT="127.0.0.1:4243"
+
 import globalVar
 
 def set_debug():
