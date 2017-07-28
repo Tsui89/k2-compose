@@ -340,7 +340,7 @@ class ComposeConcrete(ComposeFile):
         try:
             default_network = self.stream['networks']['default']['driver']
         except:
-            default_network = 'default'
+            default_network = 'bridge'
 
         for service in services:
             container = self.get_container_instance_by_service_name(service)
