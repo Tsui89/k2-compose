@@ -99,7 +99,7 @@ class ImageHistoryStore:
         pass
 
     def _store_file(self, image, tag, host):
-        return '%s/%s' % (self._store_dir(image, tag, host), host)
+        return os.path.join(self._store_dir(image, tag, host), host.replace('/','_').replace('\\','_'))
 
     def _store_dir(self, image, tag, host):
         return '%s/%s/%s/' % (self.store_dir, image, tag)
