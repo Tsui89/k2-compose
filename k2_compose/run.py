@@ -9,11 +9,9 @@ import time
 import argparse
 import logging
 
-# from health_agent import db_writer
-# from docker import  errors
 
-from k2_compose.compose_utils.basenode import DependsOn, RunsOn
-from common.common import set_debug,get_debug
+from k2_compose.k2cutils.basenode import DependsOn, RunsOn
+from k2_compose.common.common import set_debug
 from k2_compose.compose_file.compose_file import ComposeConcrete, ComposeFile
 
 logging.basicConfig(format='%(levelname)s: %(message)s',

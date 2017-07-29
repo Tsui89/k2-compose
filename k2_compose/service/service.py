@@ -1,7 +1,7 @@
 import yaml
-from ..compose_utils.basenode import Node
+from ..k2cutils.basenode import Node
 from ..k2cutils.class_utils import cached_property
-from terminaltables import SingleTable, AsciiTable
+from terminaltables import SingleTable
 from ..common.common import SERVICE_UNDEPLOYED,CONTAINER_STATUS,COLOR
 
 class ComposeService(Node):

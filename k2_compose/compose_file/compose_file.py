@@ -13,12 +13,12 @@ from pick import pick
 from terminaltables import SingleTable, AsciiTable
 
 from ..common.common import *
-from ..compose_utils.confirm_input import confirm_input
-from ..compose_utils.host import Host, host_connect
-from ..compose_utils.toposort import toposort
+from ..host.host import Host, host_connect
 from ..container.container import Container
 from ..image.image_show import ImageInspect
 from ..k2cutils.class_utils import cached_property
+from ..k2cutils.confirm_input import confirm_input
+from ..k2cutils.toposort import toposort
 from ..service.service import ComposeService
 
 

@@ -9,10 +9,10 @@ from colorclass import Color
 from docker import errors
 
 from ..common.common import *
-from ..compose_utils.confirm_input import confirm_input
 from ..image.image_history import ImageHistory
 from ..image.image_show import ImageInspect
 from ..k2cutils.class_utils import cached_property
+from ..k2cutils.confirm_input import confirm_input
 from ..service.service import ComposeService
 
 

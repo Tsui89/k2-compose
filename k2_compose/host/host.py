@@ -2,12 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import logging
-# from docker import Client
-from os import getenv
 from docker import APIClient as Client
 import socket
 
-from basenode import Node
+from ..k2cutils.basenode import Node
 from ..common.common import HOST_CONNECT, HOST_DISCONNECT, HOST_STATUS, COLOR_HOST, DOCKER_API_VERSION
 socket.setdefaulttimeout(3)
 
