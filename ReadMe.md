@@ -343,21 +343,16 @@ root@minion1:~/k2-compose-0.0.4rc2/tests# k2-compose -f k2-compose.yml ps
 ```
 
 #### agent
-检查host、container状态，并按Telnet API模式打印在终端上，后续有opentsd client处理。
+检查host、container状态，并按Telnet API模式打印在终端上，后续由opentsdb client处理。
 
 [Writing Data to OpenTSDB](http://opentsdb.net/docs/build/html/user_guide/writing.html)
 
 ```
-$ k2-compose  -f tests/k2-compose.yml agent --interval 3
-put hosts.default 1.5011261104e+12 1 host=default deployment=k2composetest preffix=default
-put hosts.as 1.5011261104e+12 1 host=as deployment=k2composetest preffix=default
-put containers.busybox2 1.5011261104e+12 142 host=as deployment=k2composetest preffix=default
-put containers.busybox1 1.5011261104e+12 210 host=default deployment=k2composetest preffix=default
-put hosts.default 1.50112611382e+12 1 host=default deployment=k2composetest preffix=default
-put hosts.as 1.50112611382e+12 1 host=as deployment=k2composetest preffix=default
-put containers.busybox2 1.50112611382e+12 101 host=as deployment=k2composetest preffix=default
-put containers.busybox1 1.50112611382e+12 209 host=default deployment=k2composetest preffix=default
-
+$ k2-compose agent --prefix gw
+put gw.k2composetest.hosts.default 1501320100.03 1 host=default
+put gw.k2composetest.hosts.as 1501320100.03 0 host=as
+put gw.k2composetest.containers.busybox2 1501320100.03 -100002 host=as container=busybox2
+put gw.k2composetest.containers.busybox1 1501320100.03 207 host=default container=busybox1
 ```
 
 ### Troubleshooting
