@@ -489,6 +489,11 @@ class Container(ComposeService):
             return message
 
     def help(self):
+        try:
+            self.client.images.get(self.image)
+        except:
+            self.pull()
+
         container = self.client.containers.create(self.image,
                                                entrypoint=["tail", "-f","/dev/null"],
                                                detach=True)
