@@ -8,7 +8,7 @@ k2-compose集成了docker-compose==1.14.0的基础功能，包括
 
 优化增加了以下功能
 
-	inspect、ps、bash、show、save
+	inspect、ps、bash、show、save、agent、help
 
 配置文件支持docker-compose原生、k2-compose定制化，这两种配置文件格式。
 
