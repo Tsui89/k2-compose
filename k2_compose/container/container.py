@@ -4,7 +4,6 @@ import signal
 import subprocess
 import time
 import tarfile
-import tempfile
 import StringIO
 import requests
 from colorclass import Color
