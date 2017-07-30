@@ -4,11 +4,35 @@
 #### 简介
 k2-compose集成了docker-compose==1.14.0的基础功能，包括
 
-	up、stop、start、restart、rm、logs、pull
+> up 启动service。如果镜像不存在，会先pull镜像
+
+> stop 停止service。
+
+> start 启动停止的service。
+
+> restart 重启service。
+
+> rm 删除service
+
+> logs 查看log
+
+> pull pull镜像
 
 优化增加了以下功能
 
-	inspect、ps、bash、show、save、agent、help
+> inspect 检查镜像信息
+
+> ps 检查service状态
+
+> bash 进入start状态的service
+
+> show 查看service分布图，或者查看service配置
+
+> save 将service的所使用的镜像重新tag／push
+
+> agent 将host／service的状态按照opentsdb方式打印到终端
+
+> help 展示service的说明文档
 
 配置文件支持docker-compose原生、k2-compose定制化，这两种配置文件格式。
 
