@@ -299,6 +299,8 @@ root@minion1:~/k2-compose-0.0.4rc2/tests# k2-compose -f k2-compose.yml inspect
 
 默认是手动选择模式，--no-interaction非交互模式
 
+失败：
+
 ```
 root@minion1:~/k2-compose-0.0.4rc2/tests# k2-compose -f k2-compose.yml save --suffix test
  Please choose your images for save (press SPACE to mark, ENTER to continue, Ctrl+C to exit):
@@ -320,6 +322,24 @@ These service`s image is not ready, please fix it first.
 │ busybox:latest │ busybox2 │ 00f017a8c2a6 │ 2017-03-09T18:28:04 │        │
 │ !(NOT MATCH)   │          │              │                     │        │
 └────────────────┴──────────┴──────────────┴─────────────────────┴────────┘
+```
+
+成功：
+
+```
+$ k2-compose save --suffix test
+List:
+do              10.1.10.48:5000/busybox:latest => 10.1.10.48:5000/busybox:latesttest
+Tagging 10.1.10.48:5000/busybox:latest => 10.1.10.48:5000/busybox:latesttest ...
+Pushing...
+busybox1 => sha256:f6c84d454a241799db9d9e1e2dd99ae17fe9fd915a14aca24812b103ce2122c5
+Push all done.
+
+┌Done────────────────────────────┬──────────┬──────────────┬─────────────────────┬────────┐
+│ Image                          │ Service  │ Image-Id     │ Created             │ Labels │
+├────────────────────────────────┼──────────┼──────────────┼─────────────────────┼────────┤
+│ 10.1.10.48:5000/busybox:latest │ busybox1 │ efe10ee6727f │ 2017-07-19T23:34:19 │        │
+└────────────────────────────────┴──────────┴──────────────┴─────────────────────┴────────┘
 ```
 
 #### rm
@@ -353,6 +373,24 @@ put gw.k2composetest.hosts.default 1501320100.03 1 host=default
 put gw.k2composetest.hosts.as 1501320100.03 0 host=as
 put gw.k2composetest.containers.busybox2 1501320100.03 -100002 host=as container=busybox2
 put gw.k2composetest.containers.busybox1 1501320100.03 207 host=default container=busybox1
+```
+
+#### help
+
+在build镜像的时候，将相关的txt文档放入镜像的/docs/目录下，使用k2-compose help <serivce> 就可以显示出来，供镜像使用者查看。
+
+```
+$ k2-compose help docs
+docs Help:
+
+   ---docs/readme.txt Begin---
+   This is Manual of busybox.
+
+   HaHaHaHa
+
+   test for service help
+   ---docs/readme.txt End---
+End
 ```
 
 ### Troubleshooting
