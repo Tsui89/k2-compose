@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from docker import APIClient as Client
+from docker import DockerClient as Client
 import socket
 
 from ..k2cutils.basenode import Node

@@ -17,56 +17,6 @@ from k2_compose.compose_file.compose_file import ComposeConcrete, ComposeFile
 logging.basicConfig(format='%(levelname)s: %(message)s',
                     datefmt='%a, %d %b %Y %H:%M:%S')
 
-# saved health-check status to influxdb when start/stop/restart/up/remove a service
-# def status_store(args):
-#     if not os.getenv("INFLUXDB"):
-#         return
-#     start_time = time.time()
-#     compose_concrete = ComposeConcrete(filename=args.file, url=args.url)
-#     logging.debug("%s consumed loading compose file" % (time.time() - start_time))
-#     # check cluster
-#     clusters = {}
-#     logging.debug('Checking docker cluster info...')
-#     for host_name, host_instance in compose_concrete.hosts_instance.items():
-#         cli = host_instance.client
-#         try:
-#             info = cli.info()
-#         except (errors.APIError, errors.DockerException) as e:
-#             logging.error(e.message)
-#         except Exception as e:
-#             logging.error(e.message)
-#         else:
-#             clusters.update({host_name: info['ClusterStore']})
-#
-#     # if len(set(clusters.values())) > 1:
-#     #     print Color(
-#     #         '{autored}Not all docker hosts shares the same cluster store. Are they really in the same cluster?{/autored}')
-#     #     sys.exit(-1)
-#     # else:
-#     #     cluster = clusters.values()[0]
-#     cluster = clusters.values()[0]
-#     net = compose_concrete.net
-#
-#     writer = db_writer.Writer(os.getenv("INFLUXDB"))
-#     result = {
-#         'tags': {
-#             'cluster': cluster,
-#             'net': net,
-#             'deployment': compose_concrete.project,
-#             'group': long(time.time() * 1000 * 1000 * 1000),  # nano
-#         },
-#         'services': {}
-#     }
-#
-#     for service_name in args.services:
-#         start_time = time.time()
-#         k2compose = K2ComposeCMD(compose_concrete_instance=compose_concrete)
-#         status = k2compose.ps(services=[service_name], json_format=False)
-#         result['services'].update({service_name: (start_time, status.get(service_name))})
-#     writer.write(result)
-#     global SYS_RETURN_CODE
-#     sys.exit(SYS_RETURN_CODE)
-
 
 class K2ComposeCMD(object):
     def __init__(self, compose_concrete_instance):
@@ -163,6 +113,8 @@ class K2ComposeCMD(object):
     def agent(self, **kwargs):
         self.composeconcrete.agent(**kwargs)
 
+    def help(self, **kwargs):
+        self.composeconcrete.help(**kwargs)
 
 class K2Platform:
     def __init__(self):
@@ -264,11 +216,11 @@ class K2Platform:
         k2compose = K2ComposeCMD(ComposeConcrete(filename=args.file, url=args.url))
         k2compose.save(suffix=args.suffix, services=args.services, only_tag=args.only_tag, only_push=args.only_push,
                        no_interaction=args.no_interaction, text=args.text)
-        logging.debug('k2-compose_file save')
+        logging.debug('k2-compose save')
 
     @classmethod
     def agent(cls, args):
-        logging.debug('k2-compose_file agent')
+        logging.debug('k2-compose agent')
 
         sleep_time = int(args.interval) if args.interval else 30
         while True:
@@ -282,10 +234,18 @@ class K2Platform:
             except:
                 break
 
+    @classmethod
+    def help(cls, args):
+        logging.debug("k2-compose help")
+        k2compose = K2ComposeCMD(
+            ComposeConcrete(filename=args.file, url=args.url))
+        k2compose.help(services=args.services)
+
 class Cmdline:
     L1_SUB_COMMANDS = ['up', 'ps', 'start', 'stop', 'restart', 'rm', 'logs',
                        # 'pull', 'bash', 'config', 'agent', 'show', 'images', 'inspect', 'save']
-                        'pull', 'bash', 'agent', 'show', 'images', 'inspect', 'save']
+                        'pull', 'bash', 'agent', 'show', 'images', 'inspect', 'save',
+                       'help']
 
     @classmethod
     def cmdline(cls):
@@ -499,12 +459,6 @@ class Cmdline:
             help="output format"
         )
 
-    # @classmethod
-    # def config(cls, cs, parser):
-    #     parser.add_argument('--input-config', '-i', help='config file')
-    #     parser.add_argument('--net', '-n', help='define network mode, select from [host,bridge,overlay,none], default is overlay.')
-    #     parser.add_argument('--only-save', action='store_true', default=False, help='save answers into a file')
-
     @classmethod
     def agent(cls, cs, parser):
         parser.add_argument('--interval', default=30,
@@ -516,6 +470,13 @@ class Cmdline:
             help='service (chain) to run'
         )
 
+    @classmethod
+    def help(cls, cs, parser):
+        parser.add_argument(
+            'services',
+            nargs='*',
+            help='service (chain) to run'
+        )
 
 def run():
     args = Cmdline.cmdline()

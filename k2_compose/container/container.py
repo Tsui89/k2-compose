@@ -3,7 +3,9 @@ import os
 import signal
 import subprocess
 import time
-
+import tarfile
+import tempfile
+import StringIO
 import requests
 from colorclass import Color
 from docker import errors
@@ -106,6 +108,7 @@ class Container(ComposeService):
         self.base_cmd = 'docker-compose -f %s -p %s ' % (
             self.docker_compose_file, self.project)
 
+        self.help_context = "\n"
     @property
     def client(self):
         return self._client
@@ -163,7 +166,7 @@ class Container(ComposeService):
         if not self.check_client('In ps container'):
             return
         try:
-            inspect = self.client.inspect_container(self.containerid)
+            container = self.client.containers.get(self.containerid)
         except errors.NotFound as e:
             self.status_code = SERVICE_UNDEPLOYED
         except (errors.APIError, errors.DockerException) as e:
@@ -172,7 +175,7 @@ class Container(ComposeService):
             logging.error(e.message)
             self.status_code = SERVICE_UNDEPLOYED
         else:
-            status = inspect.get('State').get('Status')
+            status = container.status
             if status == 'running':
                 self.status_code = SERVICE_ERROR
             else:
@@ -186,7 +189,7 @@ class Container(ComposeService):
                 or self.status_code is SERVICE_UNDEPLOYED:
             return
         try:
-            inspect = self.client.inspect_image(self.image)
+            image = self.client.images.get(self.image)
         except errors.NotFound as e:
             self._image_status = 'unchanged'
             return
@@ -197,11 +200,10 @@ class Container(ComposeService):
             self._image_status = 'unchanged'
             return
         else:
-            imageid = inspect.get('Id')
+            imageid = image.id
 
         try:
-            container_inspect = self.client.inspect_container(
-                self.containerid)
+            container = self.client.containers.get(self.containerid)
         except errors.NotFound as e:
             self._image_status = 'unchanged'
             return
@@ -212,7 +214,7 @@ class Container(ComposeService):
             self._image_status = 'unchanged'
             return
         else:
-            if imageid == container_inspect.get('Image'):
+            if imageid == container.image.id:
                 self._image_status = 'unchanged'
             else:
                 self._image_status = 'changed'
@@ -293,7 +295,8 @@ class Container(ComposeService):
         if self.status_code is SERVICE_STOP:
             try:
                 print 'Starting [%s] ...' % (self.id)
-                self.client.start(self.containerid)
+                container = self.client.containers.get(self.containerid)
+                container.start()
                 SYS_RETURN_CODE = 0
                 print 'Done.'
             except errors.NotFound as e:
@@ -343,7 +346,8 @@ class Container(ComposeService):
         else:
             try:
                 print 'Stopping [%s] ...' % (self.id)
-                self.client.stop(self.containerid, CONTAINER_EXIT_WAIT)
+                container = self.client.containers.get(self.containerid)
+                container.stop(timeout=CONTAINER_EXIT_WAIT)
                 SYS_RETURN_CODE = 0
                 print 'Done.'
             except errors.NotFound as e:
@@ -390,7 +394,8 @@ class Container(ComposeService):
         else:
             try:
                 print 'Removing [%s] ...' % (self.id)
-                self.client.remove_container(self.containerid, force=force)
+                container = self.client.containers.get(self.containerid)
+                container.remove(force=force)
                 SYS_RETURN_CODE = 0
                 print 'Done.'
             except errors.NotFound as e:
@@ -425,18 +430,18 @@ class Container(ComposeService):
     def image_label(self):
 
         try:
-            container_inspect = self.client.inspect_container(self.containerid)
+            container = self.client.containers.get(self.containerid)
         except:
             imageid = self.image
         else:
-            imageid = container_inspect.get('Image')
+            imageid = container.image.id
 
         try:
-            data = self.client.inspect_image(imageid)
+            data = self.client.images.get(imageid)
         except:
             return ImageInspect(service=self.id, image=self.image)()
         else:
-            return ImageInspect(service=self.id, image=self.image, **data)()
+            return ImageInspect(service=self.id, image=self.image, **data.attrs)()
 
     def tag(self, suffix):
         index = self.image.rfind(':')
@@ -444,7 +449,10 @@ class Container(ComposeService):
         _tag = self.image[index + 1:] + suffix
         print 'Tagging %s => %s:%s ...' % (self.image, _repository, _tag)
         try:
-            self.client.tag(image=self.image, repository=_repository, tag=_tag)
+            # image = self.client.images.get(self.image)
+            image = self.client.api.tag(self.image,_repository, _tag)
+            # image.attrs['RepoTags'].append("%s:%s"%(_repository,_tag))
+
         except Exception as e:
             print e.message
             return False
@@ -459,7 +467,8 @@ class Container(ComposeService):
         # print 'Pushing %s:%s ...'%(_repository,_tag)
         try:
             # print 'push is running. please wait...'
-            for _result in self.client.push(repository=_repository, tag=_tag,
+            # images = self.client.images.get()
+            for _result in self.client.images.push(repository=_repository, tag=_tag,
                                             stream=True):
                 r = eval(_result)
                 try:
@@ -479,3 +488,24 @@ class Container(ComposeService):
         else:
             # print 'Done.'
             return message
+
+    def help(self):
+        container = self.client.containers.create(self.image,
+                                               entrypoint=["tail", "-f","/dev/null"],
+                                               detach=True)
+        try:
+            (raw,stat) = container.get_archive("/docs")
+        except Exception as e:
+            print e.message,"/docs"
+            return
+        finally:
+            container.remove(force=True)
+        stm = StringIO.StringIO(raw.data)
+        tar = tarfile.open(fileobj=stm)
+        for member in tar.getmembers():
+            f = tar.extractfile(member)
+            if f:
+                self.help_context += "---%s Begin---\n"%f.name
+                self.help_context += f.read()
+                self.help_context += "\n---%s End---"%f.name
+        tar.close()

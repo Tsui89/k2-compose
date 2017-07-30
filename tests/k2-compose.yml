@@ -24,3 +24,8 @@ services:
     entrypoint: ["ping", "localhost"]
     s_depends_on:
       - busybox1
+
+  docs:
+    build: ./docs/
+    image: busybox:docs
+    entrypoint: ["ping", "localhost"]

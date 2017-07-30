@@ -746,3 +746,32 @@ class ComposeConcrete(ComposeFile):
                                                         now=now,
                                                         value=value,
                                                         tags=' '.join(tags))
+
+    def help(self, services=None):
+        services = self.check_service(services, msg='In HELP:')
+
+        result = {}
+        pool_containers = []
+        help_context = "Connect Error"
+        for service in services:
+            host = self.get_host_instance_by_container_id(service)
+            if host.status != 'running':
+                result.update({service: help_context})
+                continue
+            pool_containers.append(self.get_container_instance_by_service_name(service))
+        if services and len(pool_containers) > 0:
+            pool = ThreadPool(len(pool_containers))
+            for container in pool_containers:
+                pool.apply_async(container.help)
+
+            pool.close()
+            pool.join()
+
+        for container in pool_containers:
+            result.update({container.id: container.help_context})
+
+        for k,res in result.items():
+            print "%s Help:"%k
+            for l in res.split('\n'):
+                print "  ",l
+            print "End\n"
