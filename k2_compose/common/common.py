@@ -34,15 +34,19 @@ HEALTH_CHECK_EXEC_TIME_RUNNING = 0
 
 DEBUG = False
 
+
 from os import getenv
 DOCKER_API_VERSION = getenv('DOCKER_API_VERSION', '1.23')
 
 DOCKER_HOST_DEFAULT="unix:///var/run/docker.sock"
 
+
 import globalVar
+
 
 def set_debug():
     globalVar.set_debug()
+
 
 def get_debug():
     return globalVar.get_debug()
