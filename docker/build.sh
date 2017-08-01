@@ -8,7 +8,6 @@ docker build -t ${IMAGE} \
   --build-arg commit=$(git rev-parse HEAD) \
   --build-arg buildtime="$(date +"%Y-%m-%d %T")"  \
   --build-arg owner=${IMAGE_OWNER} \
-  --build-arg env_para="$(cat $SCRIPT_DIR/env-list.yaml)" \
   ${SCRIPT_DIR}/../
 
 echo -e "\n$IMAGE"

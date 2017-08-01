@@ -9,9 +9,9 @@ from setuptools import setup,find_packages
 
 ROOT_DIR = os.path.dirname(__file__)
 SOURCE_DIR = os.path.join(ROOT_DIR)
-
+Version = open('version').read()
 setup(name="k2-compose",
-      version='0.0.9rc3',
+      version=Version,
       packages=find_packages(exclude=['tests.*']),
       # package_dir = {
       #   '':'k2_compose'
@@ -47,7 +47,6 @@ setup(name="k2-compose",
       install_requires=[
           # 'colorama>=0.3.7',
           'docker-compose==1.14.0',
-          'six>=1.9.0',
           'colorclass==2.2.0',
           'terminaltables==3.0.0',
           'pick',
