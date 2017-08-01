@@ -1,5 +1,5 @@
 
-#### 最新版本0.0.9rc7
+#### 最新版本0.0.9rc8
 
 #### 简介
 k2-compose集成了docker-compose==1.14.0的基础功能，包括
@@ -40,7 +40,7 @@ k2-compose集成了docker-compose==1.14.0的基础功能，包括
 
 pip install k2-compose
 
-最新版本： sudo pip install k2-compose==0.0.9rc7 -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
+最新版本： sudo pip install k2-compose==0.0.9rc8 -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
 
 项目地址：[https://github.com/Tsui89/k2-compose](https://github.com/Tsui89/k2-compose)
 
@@ -178,10 +178,10 @@ root@minion1:~/k2-compose-0.0.4rc1/tests# k2-compose -f k2-compose.yml ps
 ```
 
 #### stop
-停止service
+停止service, -t/--time 参数指定超时时间，强制stop。
 
 ```
-root@minion1:~/k2-compose-0.0.4rc1/tests# k2-compose -f k2-compose.yml stop
+root@minion1:~/k2-compose-0.0.4rc1/tests# k2-compose -f k2-compose.yml stop -t 3
 Going to stop ALL-Services. Are you sure? [yN] y
 Stopping [busybox2] ...
 Done.
@@ -195,6 +195,7 @@ root@minion1:~/k2-compose-0.0.4rc1/tests# k2-compose -f k2-compose.yml ps
 +----------+----------------+----------------+--------------+------------+-------+--------------+
 | busybox2 | localhost:4243 | stopped        |              | - busybox1 |       | default      |
 +----------+----------------+----------------+--------------+------------+-------+--------------+
+
 ```
 
 #### start
