@@ -328,7 +328,7 @@ class Container(ComposeService):
             self.docker_compose_file, self.project, parameter, self.id)
         subprocesscmd(cmd, env={'DOCKER_HOST': self.hostip})
 
-    def stop(self):
+    def stop(self,time=10):
         if not self.check_client('In stop'):
             return
         global SYS_RETURN_CODE
@@ -346,7 +346,7 @@ class Container(ComposeService):
             try:
                 print 'Stopping [%s] ...' % (self.id)
                 container = self.client.containers.get(self.containerid)
-                container.stop(timeout=CONTAINER_EXIT_WAIT)
+                container.stop(timeout=time)
                 SYS_RETURN_CODE = 0
                 print 'Done.'
             except errors.NotFound as e:

@@ -440,7 +440,7 @@ class ComposeConcrete(ComposeFile):
             container = self.get_container_instance_by_service_name(service)
             container.logs(parameter)
 
-    def stop(self, services=None):
+    def stop(self, services=None, time=10):
         services = self.check_service(services, msg='In STOP:')
         if services == self.sorted_services:
             confirm_input('Going to stop ALL-Services.')
@@ -452,7 +452,7 @@ class ComposeConcrete(ComposeFile):
                               ' Connect [%s] error.' % (service, host.id))
                 continue
             container = self.get_container_instance_by_service_name(service)
-            container.stop()
+            container.stop(time=time)
 
     def restart(self, services=None):
         services = self.check_service(services, msg='In RESTART:')

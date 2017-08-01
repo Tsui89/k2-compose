@@ -11,7 +11,7 @@ import logging
 
 
 from k2_compose.k2cutils.basenode import DependsOn, RunsOn
-from k2_compose.common.common import set_debug
+from k2_compose.common.common import set_debug,CONTAINER_EXIT_WAIT
 from k2_compose.compose_file.compose_file import ComposeConcrete, ComposeFile
 
 logging.basicConfig(format='%(levelname)s: %(message)s',
@@ -163,7 +163,7 @@ class K2Platform:
     @classmethod
     def stop(cls, args):
         k2compose = K2ComposeCMD(ComposeConcrete(filename=args.file, url=args.url))
-        k2compose.stop(services=args.services)
+        k2compose.stop(services=args.services, time=args.time)
         # status_store(args)
         logging.debug('k2-compose stop')
 
@@ -329,6 +329,13 @@ class Cmdline:
             "services",
             nargs='*',
             help="services to stop"
+        )
+        parser.add_argument(
+            "-t",
+            "--time",
+            type=int,
+            default=CONTAINER_EXIT_WAIT,
+            help="Seconds to wait for stop before killing it"
         )
 
     @classmethod
