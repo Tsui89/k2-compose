@@ -735,10 +735,11 @@ class ComposeConcrete(ComposeFile):
         for service_name, container in self._containers.items():
             print self._message("%s%s.containers.%s" % (_prefix, _deployment, service_name), container.exec_time,
                                 host=container.hostname, container=service_name)
+        sys.stdout.flush()
 
     @classmethod
     def _message(cls, name, value, **kwargs):
-        now = time.time()  # ms
+        now = int(time.time())  # ms
         tags = []
         for k, v in kwargs.items():
             tags.append("%s=%s" % (k, str(v)))
