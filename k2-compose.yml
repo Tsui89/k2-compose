@@ -1,0 +1,12 @@
+version: "2"
+
+project: k2-compose
+
+services:
+  k2-compose:
+    image: dev.k2data.com.cn:5001/ops/k2-compose:master-0.0.1
+    network_mode: host
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./data:/data

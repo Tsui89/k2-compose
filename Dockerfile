@@ -12,9 +12,11 @@ RUN pip install docker-compose==1.14.0 pytz colorclass terminaltables pick -i ht
 
 COPY README.rst /docs/
 # put your commands here
-COPY k2_compose /opt/k2-compose/
+
+COPY k2_compose /opt/k2-compose/k2_compose
 COPY setup.py version /opt/k2-compose/
 WORKDIR /opt/k2-compose
 RUN python setup.py install
 
+WORKDIR /
 ENTRYPOINT ["ping", "localhost"]
