@@ -394,10 +394,18 @@ root@minion1:~/k2-compose-0.0.4rc2/tests# k2-compose -f k2-compose.yml ps
 
 ```
 $ k2-compose agent --prefix gw
-put gw.k2composetest.hosts.default 1501320100.03 1 host=default
-put gw.k2composetest.hosts.as 1501320100.03 0 host=as
-put gw.k2composetest.containers.busybox2 1501320100.03 -100002 host=as container=busybox2
-put gw.k2composetest.containers.busybox1 1501320100.03 207 host=default container=busybox1
+put gw.k2composetest.hosts.default 1501743176 1 host=default
+put gw.k2composetest.hosts.as 1501743176 1 host=as
+put gw.k2composetest.containers.busybox2 1501743176 76 host=as container=busybox2
+put gw.k2composetest.containers.busybox2.mem_limit 1501743176 32051 host=as container=busybox2
+put gw.k2composetest.containers.busybox2.mem_usage 1501743176 0 host=as container=busybox2
+put gw.k2composetest.containers.busybox2.mem_percent 1501743176 0.0 host=as container=busybox2
+put gw.k2composetest.containers.busybox2.cpu_percent 1501743176 0.01 host=as container=busybox2
+put gw.k2composetest.containers.busybox1 1501743176 201 host=default container=busybox1
+put gw.k2composetest.containers.busybox1.mem_limit 1501743176 32051 host=default container=busybox1
+put gw.k2composetest.containers.busybox1.mem_usage 1501743176 0 host=default container=busybox1
+put gw.k2composetest.containers.busybox1.mem_percent 1501743176 0.0 host=default container=busybox1
+put gw.k2composetest.containers.busybox1.cpu_percent 1501743176 0.01 host=default container=busybox1
 ```
 
 #### help
