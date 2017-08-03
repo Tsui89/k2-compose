@@ -735,6 +735,14 @@ class ComposeConcrete(ComposeFile):
         for service_name, container in self._containers.items():
             print self._message("%s%s.containers.%s" % (_prefix, _deployment, service_name), container.exec_time,
                                 host=container.hostname, container=service_name)
+            print self._message("%s%s.containers.%s.mem_limit" % (_prefix, _deployment, service_name), container.mem_limit,
+                                host=container.hostname, container=service_name)
+            print self._message("%s%s.containers.%s.mem_usage" % (_prefix, _deployment, service_name), container.mem_usage,
+                                host=container.hostname, container=service_name)
+            print self._message("%s%s.containers.%s.mem_percent" % (_prefix, _deployment, service_name), container.mem_percent,
+                                host=container.hostname, container=service_name)
+            print self._message("%s%s.containers.%s.cpu_percent" % (_prefix, _deployment, service_name), container.cpu_percent,
+                                host=container.hostname, container=service_name)
         sys.stdout.flush()
 
     @classmethod

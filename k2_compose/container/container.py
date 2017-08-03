@@ -108,6 +108,12 @@ class Container(ComposeService):
             self.docker_compose_file, self.project)
 
         self.help_context = "\n"
+        self.mem_limit = 0
+        self.mem_percent = 0
+        self.mem_usage = 0
+        self.cpu_percent = 0
+        self.net_in = 0
+        self.net_out = 0
     @property
     def client(self):
         return self._client
@@ -139,27 +145,27 @@ class Container(ComposeService):
         subprocesscmd(cmd, env={'DOCKER_HOST': self.hostip},
                       description='ps detail:', show_message=False)
 
-    def stats(self):
-        try:
-            stats = self.client.stats(self.containerid, stream=False,
-                                      decode=True)
-            mem_limit = stats['memory_stats']['limit']
-            mem_percent = float(
-                stats['memory_stats']['usage'] * 100) / mem_limit
-            cpu_percent = 0.0
-            cpu_delta = float(stats['cpu_stats']['cpu_usage']['total_usage']
-                              - stats['precpu_stats']['cpu_usage'][
-                                  'total_usage'])
-            system_delta = float(
-                stats['cpu_stats']['system_cpu_usage'] - stats['precpu_stats'][
-                    'system_cpu_usage'])
-            processor_num = len(stats['cpu_stats']['cpu_usage']['percpu_usage'])
-            if cpu_delta > 0.0 and system_delta > 0.0:
-                cpu_percent = (cpu_delta / system_delta) * processor_num * 100.0
-            return round(cpu_percent, 2), round(mem_percent, 2), mem_limit
-        except Exception, e:
-            print e
-            return None, None, None
+    def stats(self, stats):
+
+        if not stats:
+            return
+        # print stats['networks']
+        mem_limit = stats['memory_stats']['limit']
+        mem_usage = stats['memory_stats']['usage']
+        self.mem_percent = round(float(
+            stats['memory_stats']['usage'] * 100) / mem_limit, 2)
+        cpu_delta = float(stats['cpu_stats']['cpu_usage']['total_usage']
+                          - stats['precpu_stats']['cpu_usage'][
+                              'total_usage'])
+        system_delta = float(
+            stats['cpu_stats']['system_cpu_usage'] - stats['precpu_stats'][
+                'system_cpu_usage'])
+        processor_num = len(stats['cpu_stats']['cpu_usage']['percpu_usage'])
+        if cpu_delta > 0.0 and system_delta > 0.0:
+            self.cpu_percent = round((cpu_delta / system_delta) * processor_num * 100.0,2)
+        self.mem_limit = mem_limit / 1024 / 1024 #MB
+        self.mem_usage = mem_usage / 1024 / 1024 #MB
+
 
     def ps_container(self):
         if not self.check_client('In ps container'):
@@ -177,6 +183,7 @@ class Container(ComposeService):
             status = container.status
             if status == 'running':
                 self.status_code = SERVICE_ERROR
+                self.stats(stats=container.stats(decode=True, stream=False))
             else:
                 self.status_code = SERVICE_STOP
 
