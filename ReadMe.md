@@ -1,5 +1,5 @@
 
-#### 最新版本0.0.9rc8
+#### 最新版本0.0.9rc12
 
 #### 简介
 k2-compose集成了docker-compose==1.14.0的基础功能，包括
@@ -40,7 +40,7 @@ k2-compose集成了docker-compose==1.14.0的基础功能，包括
 
 pip install k2-compose
 
-最新版本： sudo pip install k2-compose==0.0.9rc8 -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
+最新版本： sudo pip install k2-compose==0.0.9rc12 -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
 
 项目地址：[https://github.com/Tsui89/k2-compose](https://github.com/Tsui89/k2-compose)
 
@@ -388,7 +388,7 @@ root@minion1:~/k2-compose-0.0.4rc2/tests# k2-compose -f k2-compose.yml ps
 ```
 
 #### agent
-检查host、container状态，并按Telnet API模式打印在终端上，后续由opentsdb client处理。
+检查host、container状态以及cpu/memory使用情况，并按Telnet API模式打印在终端上，后续由opentsdb client处理。
 
 [Writing Data to OpenTSDB](http://opentsdb.net/docs/build/html/user_guide/writing.html)
 
