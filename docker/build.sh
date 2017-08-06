@@ -12,6 +12,4 @@ docker build -t ${IMAGE} \
 
 echo -e "\n$IMAGE"
 docker inspect --format "branch={{.Config.Labels.branch}} commit={{.Config.Labels.commit}} buildtime={{.Config.Labels.buildtime}} owner={{.Config.Labels.owner}}" $IMAGE
-echo "env_para="
-docker inspect --format "{{.Config.Labels.env_para}}" $IMAGE
 

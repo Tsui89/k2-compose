@@ -20,7 +20,7 @@ from ..k2cutils.class_utils import cached_property
 from ..k2cutils.confirm_input import confirm_input
 from ..k2cutils.toposort import toposort
 from ..service.service import ComposeService
-
+from ..agent.opentsdb import OpenTSDB_Sender
 
 def check_compose_file(filename):
     if not os.path.isfile(filename):
@@ -719,7 +719,7 @@ class ComposeConcrete(ComposeFile):
             print table_instance.table
         return
 
-    def agent(self, services=None, prefix=None):
+    def agent(self, services=None, prefix=None, opentsdb_http=None):
         # services = self.check_service(services)
         self.ps(services, ignore_deps=True)
         _deployment = self.project
@@ -728,21 +728,28 @@ class ComposeConcrete(ComposeFile):
         else:
             _prefix = ""
 
+        sender=self._sender
+
+        if opentsdb_http != None:
+            sender = OpenTSDB_Sender(server=opentsdb_http).send
+
+        data = []
         for host_name, host_instance in self.hosts_instance.items():
-            print self._message("%s%s.hosts.%s" % (_prefix, _deployment, host_name), host_instance.status_code,
-                                host=host_name)
+            data.append(self._message("%s%s.hosts.%s" % (_prefix, _deployment, host_name), host_instance.status_code,
+                                host=host_name))
 
         for service_name, container in self._containers.items():
-            print self._message("%s%s.containers.%s" % (_prefix, _deployment, service_name), container.exec_time,
-                                host=container.hostname, container=service_name)
-            print self._message("%s%s.containers.%s.mem_limit" % (_prefix, _deployment, service_name), container.mem_limit,
-                                host=container.hostname, container=service_name)
-            print self._message("%s%s.containers.%s.mem_usage" % (_prefix, _deployment, service_name), container.mem_usage,
-                                host=container.hostname, container=service_name)
-            print self._message("%s%s.containers.%s.mem_percent" % (_prefix, _deployment, service_name), container.mem_percent,
-                                host=container.hostname, container=service_name)
-            print self._message("%s%s.containers.%s.cpu_percent" % (_prefix, _deployment, service_name), container.cpu_percent,
-                                host=container.hostname, container=service_name)
+            data.append(self._message("%s%s.containers.%s" % (_prefix, _deployment, service_name), container.exec_time,
+                                host=container.hostname, container=service_name))
+            data.append(self._message("%s%s.containers.%s.mem_limit" % (_prefix, _deployment, service_name), container.mem_limit,
+                                host=container.hostname, container=service_name))
+            data.append(self._message("%s%s.containers.%s.mem_usage" % (_prefix, _deployment, service_name), container.mem_usage,
+                                host=container.hostname, container=service_name))
+            data.append(self._message("%s%s.containers.%s.mem_percent" % (_prefix, _deployment, service_name), container.mem_percent,
+                                host=container.hostname, container=service_name))
+            data.append(self._message("%s%s.containers.%s.cpu_percent" % (_prefix, _deployment, service_name), container.cpu_percent,
+                                host=container.hostname, container=service_name))
+        sender(data)
         sys.stdout.flush()
 
     @classmethod
@@ -755,6 +762,11 @@ class ComposeConcrete(ComposeFile):
                                                         now=now,
                                                         value=value,
                                                         tags=' '.join(tags))
+
+    @classmethod
+    def _sender(cls,lines):
+        for line in lines:
+            print line
 
     def help(self, services=None):
         services = self.check_service(services, msg='In HELP:')

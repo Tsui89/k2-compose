@@ -116,6 +116,7 @@ class K2ComposeCMD(object):
     def help(self, **kwargs):
         self.composeconcrete.help(**kwargs)
 
+
 class K2Platform:
     def __init__(self):
         self.client = None
@@ -226,7 +227,9 @@ class K2Platform:
         while True:
             try:
                 k2compose = K2ComposeCMD(ComposeConcrete(filename=args.file, url=args.url))
-                k2compose.agent(services=args.services,prefix=args.prefix)
+                k2compose.agent(services=args.services,
+                                prefix=args.prefix,
+                                opentsdb_http=args.opentsdb_http)
             except KeyboardInterrupt:
                 break
             try:
@@ -476,6 +479,10 @@ class Cmdline:
             nargs='*',
             help='service (chain) to run'
         )
+        parser.add_argument(
+            '--opentsdb-http',
+            help='opentsdb server http api, eg: 106.120.241.178:4242'
+        )
 
     @classmethod
     def help(cls, cs, parser):
@@ -484,6 +491,7 @@ class Cmdline:
             nargs='*',
             help='service (chain) to run'
         )
+
 
 def run():
     args = Cmdline.cmdline()
