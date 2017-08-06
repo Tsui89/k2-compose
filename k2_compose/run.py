@@ -232,10 +232,11 @@ class K2Platform:
                                 opentsdb_http=args.opentsdb_http)
             except KeyboardInterrupt:
                 break
-            try:
+            except Exception as e:
+                print e.message
+            finally:
                 time.sleep(sleep_time)
-            except:
-                break
+
 
     @classmethod
     def help(cls, args):
