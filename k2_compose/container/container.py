@@ -38,18 +38,29 @@ def http_get(url, timeout=None, description=None, show_message=True):
 
 def socket_connect(url, timeout=None, description=None, show_message=True):
     _time_begin = time.time()
-    host_ip, host_port = url.split(':')
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        s.connect((host_ip, int(host_port)))
-    except Exception as e:
-        logging.error("%s %s"%(description,e))
-        _exec_time = int((time.time() - _time_begin) * 1000)  # ms
-        return -_exec_time if _exec_time > 0 else HEALTH_CHECK_EXEC_TIME_ERROR_DEFAULT
+
+    if url.startswith("unix://"):
+        _socket=url.replace('unix://', '')
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            s.connect(_socket)
+        except Exception as e:
+            logging.error("%s %s"%(description,e))
+            _exec_time = int((time.time() - _time_begin) * 1000)  # ms
+            return -_exec_time if _exec_time > 0 else HEALTH_CHECK_EXEC_TIME_ERROR_DEFAULT
     else:
-        s.shutdown(2)
-        _exec_time = int((time.time() - _time_begin) * 1000)  # ms
-        return _exec_time
+        _ip, _port = url.split(':')
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.connect((_ip, int(_port)))
+        except Exception as e:
+            logging.error("%s %s"%(description,e))
+            _exec_time = int((time.time() - _time_begin) * 1000)  # ms
+            return -_exec_time if _exec_time > 0 else HEALTH_CHECK_EXEC_TIME_ERROR_DEFAULT
+
+    s.shutdown(2)
+    _exec_time = int((time.time() - _time_begin) * 1000)  # ms
+    return _exec_time
 
 
 def subprocesscmd(cmd_str='', timeout=None, description='', env=os.environ,
@@ -273,7 +284,8 @@ class Container(ComposeService):
         elif health_check.has_key('socket'):
             url = health_check.get('socket','')
             if url:
-                self.exec_time = socket_connect(url,timeout=timeout)
+                self.exec_time = socket_connect(url,timeout=timeout,show_message=False,
+                                                description='In [%s] health check:' % self.id)
             else:
                 self.exec_time = HEALTH_CHECK_EXEC_TIME_RUNNING
         else:
