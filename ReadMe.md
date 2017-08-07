@@ -96,6 +96,7 @@ services:
 |services.service.health\_check|健康检查命令属性|object|false|空（健康）|
 |services.service.health\_check.shell|检查命令shell格式|string or string数组|false
 |services.service.health\_check.http|检查httpGet返回值|URL|false
+|services.service.health\_check.socket|socket连接状态|URL|false
 |services.service.health\_check.timeout|检查命令超时时间|int(单位s)|false|10|
 
 health_check中shell/http二选一。
@@ -388,7 +389,7 @@ root@minion1:~/k2-compose-0.0.4rc2/tests# k2-compose -f k2-compose.yml ps
 ```
 
 #### agent
-检查host、container状态以及cpu/memory使用情况，并按Telnet API模式打印在终端上，后续由opentsdb client处理。
+检查host、container状态以及cpu/memory使用情况，并按Telnet API模式打印在终端上，也可以使用--opentsdb-http参数指定opentsdb服务地址，发送组件监控状态。
 
 [Writing Data to OpenTSDB](http://opentsdb.net/docs/build/html/user_guide/writing.html)
 
@@ -406,6 +407,8 @@ put gw.k2composetest.containers.busybox1.mem_limit 1501743176 32051 host=default
 put gw.k2composetest.containers.busybox1.mem_usage 1501743176 0 host=default container=busybox1
 put gw.k2composetest.containers.busybox1.mem_percent 1501743176 0.0 host=default container=busybox1
 put gw.k2composetest.containers.busybox1.cpu_percent 1501743176 0.01 host=default container=busybox1
+
+$ k2-compose agent --prefix cwc --opentsdb-http localhost:4242 --interval 3
 ```
 
 #### help
