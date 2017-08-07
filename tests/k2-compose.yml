@@ -9,7 +9,8 @@ services:
   busybox1:
     image: busybox:latest
     health_check:
-      shell: echo "ok." && exit 0
+#      shell: echo "ok." && exit 0
+      socket: localhost:8086
       timeout: 10
     entrypoint: ["ping", "localhost"]
     environment:
@@ -25,7 +26,7 @@ services:
     s_depends_on:
       - busybox1
 
-  docs:
-    build: ./docs/
-    image: busybox:docs
-    entrypoint: ["ping", "localhost"]
+#  docs:
+#    build: ./docs/
+#    image: busybox:docs
+#    entrypoint: ["ping", "localhost"]
