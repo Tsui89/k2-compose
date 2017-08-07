@@ -1,5 +1,5 @@
 
-#### 最新版本0.0.9rc12
+#### 最新版本0.1.1
 
 #### 简介
 k2-compose集成了docker-compose==1.14.0的基础功能，包括
@@ -30,7 +30,7 @@ k2-compose集成了docker-compose==1.14.0的基础功能，包括
 
 > save 将service的所使用的镜像重新tag／push
 
-> agent 将host／service的状态按照opentsdb方式打印到终端
+> agent 将host／service的状态按照opentsdb telnet方式打印到终端上，或直接发送到opentsdb http接口
 
 > help 展示service的说明文档
 
