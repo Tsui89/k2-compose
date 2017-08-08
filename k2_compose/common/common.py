@@ -36,6 +36,8 @@ HEALTH_CHECK_EXEC_TIME_ERROR_DEFAULT=-10
 
 DEBUG = False
 
+HOSTS_METRIC = 'hosts'
+CONTAINERS_METRIC = 'containers'
 
 from os import getenv
 DOCKER_API_VERSION = getenv('DOCKER_API_VERSION', '1.23')

@@ -191,8 +191,8 @@ class Container(ComposeService):
         processor_num = len(stats['cpu_stats']['cpu_usage']['percpu_usage'])
         if cpu_delta > 0.0 and system_delta > 0.0:
             self.cpu_percent = round((cpu_delta / system_delta) * processor_num * 100.0,2)
-        self.mem_limit = mem_limit / 1024 / 1024 #MB
-        self.mem_usage = mem_usage / 1024 / 1024 #MB
+        self.mem_limit = round(float(mem_limit * 1.0 / 1024 / 1024),2) #MB
+        self.mem_usage = round(float(mem_usage * 1.0 / 1024 / 1024),2) #MB
 
 
     def ps_container(self):
