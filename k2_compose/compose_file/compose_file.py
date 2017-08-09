@@ -218,7 +218,7 @@ class ComposeFile(object):
         row_hosts = Row(title='Hosts Status')
         for host_name in self.hosts:
             metric = "%s.%s.%s" % (metric_prefix, HOSTS_METRIC, host_name)
-            target = Target(metric,metric,host_name)
+            target = Target(host_name,metric)
             panel = Panel(title=host_name)
             panel.add_target(target)
             row_hosts.add_panel(panel)
@@ -226,22 +226,28 @@ class ComposeFile(object):
         for service in services:
             row_service = Row(title=service)
             metric = "%s.%s.%s" % (metric_prefix, CONTAINERS_METRIC, service)
-            target = Target(metric,metric,service)
-            panel = Panel(title=service)
+            target = Target(service,metric)
+            panel = Panel(title=service,yaxes_l='ms')
             panel.add_target(target)
             row_service.add_panel(panel)
-            for t in ['mem_limit', 'mem_usage', 'mem_percent', 'cpu_percent']:
-                metric = "%s.%s.%s.%s" % (metric_prefix, CONTAINERS_METRIC, service, t)
-                target = Target(metric,metric,service+t)
-                if t in ['mem_percent', 'cpu_percent']:
-                    yaxes_l='percent'
-                else:
-                    yaxes_l= 'decmbytes'
-                panel = Panel(title=service+t,yaxes_l=yaxes_l)
+
+            panel = Panel(title='Memory',yaxes_l = 'decmbytes')
+            for t in ['mem_limit', 'mem_usage']:
+                metric = "%s.%s.%s.%s"%(metric_prefix, CONTAINERS_METRIC, service, t)
+                target = Target(service + t, metric)
                 panel.add_target(target)
-                row_service.add_panel(panel)
+            row_service.add_panel(panel)
+
+            panel = Panel(title='Usage Percent',yaxes_l = 'percent')
+            for t in ['mem_percent', 'cpu_percent']:
+                metric = "%s.%s.%s.%s"%(metric_prefix, CONTAINERS_METRIC, service, t)
+                target = Target(service + t, metric)
+                panel.add_target(target)
+            row_service.add_panel(panel)
+
             dashboad.add_row(row_service)
         json.dump(dashboad.__dict__,open('%s-dashboard.json'%metric_prefix,'w+'),indent=2)
+
     def metric_prefix(self, prefix=None):
         _deployment = self.project.__str__()
         if prefix:
@@ -799,7 +805,10 @@ class ComposeConcrete(ComposeFile):
         return
 
     def agent(self, services=None, prefix=None, opentsdb_http=None):
-        # services = self.check_service(services)
+        services = self.check_service(services)
+        if services == None:
+            print 'None'
+            return
         self.ps(services, ignore_deps=True)
         sender = self._sender
         if opentsdb_http != None:
@@ -813,8 +822,8 @@ class ComposeConcrete(ComposeFile):
             data.append(self._message(metric,
                                       value=host_instance.status_code,
                                       host=host_name))
-
-        for service_name, container in self._containers.items():
+        for service_name in services:
+            container = self.get_container_instance_by_service_name(service_name)
             metric = "%s.%s.%s" % (
             metric_prefix, CONTAINERS_METRIC, service_name)
             data.append(self._message(metric,
