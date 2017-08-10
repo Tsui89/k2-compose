@@ -99,3 +99,8 @@ src/.k2composetest-compose.yml
 .k2composetest-compose.yml
 k2_compose/.k2composetest-compose.yml
 
+k2_compose/.demo-compose.yml
+k2_compose/demo-dashboard.json
+k2_compose/demo.demo-dashboard.json
+k2_compose/k2composetest-dashboard.json
+timestamp.py

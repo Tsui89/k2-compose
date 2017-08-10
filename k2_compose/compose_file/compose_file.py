@@ -4,10 +4,11 @@ import os
 import re
 import sys
 import time
+import json
+import yaml
 from multiprocessing.dummy import Pool as ThreadPool
 
 import requests
-import yaml
 from colorclass import Color
 from pick import pick
 from terminaltables import SingleTable, AsciiTable
@@ -21,6 +22,8 @@ from ..k2cutils.confirm_input import confirm_input
 from ..k2cutils.toposort import toposort
 from ..service.service import ComposeService
 from ..agent.opentsdb import OpenTSDB_Sender
+from ..agent.grafana import *
+
 
 def check_compose_file(filename):
     if not os.path.isfile(filename):
@@ -56,9 +59,12 @@ class ComposeFile(object):
             try:
                 rsp = requests.get(url)
                 if rsp.status_code != 200:
-                    logging.error('error get url %s: %s %s' % (url, rsp.status_code, rsp.reason))
+                    logging.error('error get url %s: %s %s' % (
+                    url, rsp.status_code, rsp.reason))
                 rsp_json = rsp.json()
-                file_content = rsp_json.get('content') if 'content' in rsp_json else rsp_json['body'].get('content')
+                file_content = rsp_json.get(
+                    'content') if 'content' in rsp_json else rsp_json[
+                    'body'].get('content')
                 self.stream = yaml.safe_load(file_content)
                 self.stream_name = url
 
@@ -72,7 +78,8 @@ class ComposeFile(object):
 
     def get_project(self):
         try:
-            project = self.stream.get('project', os.path.basename(os.path.dirname(os.path.realpath(self.stream_name))))
+            project = self.stream.get('project', os.path.basename(
+                os.path.dirname(os.path.realpath(self.stream_name))))
             return project
         except:
             return DOCKER_PROJECT_PREFIX
@@ -98,8 +105,11 @@ class ComposeFile(object):
     def hosts(self):
         try:
             data = self.stream.get('hosts', {})
-            docker_host = os.getenv("DOCKER_HOST", DOCKER_HOST_DEFAULT)
-            data.update({'default': docker_host})
+            for s, v in self.services.items():
+                if not v.has_key('host'):
+                    docker_host = os.getenv("DOCKER_HOST", DOCKER_HOST_DEFAULT)
+                    data.update({'default': docker_host})
+                    break
             return data
         except KeyError:
             return {}
@@ -200,6 +210,59 @@ class ComposeFile(object):
         table_instance.inner_row_border = True
         print table_instance.table
 
+    def create_grafana_dashbord(self, services=None, prefix=None):
+        services = self.check_service(services)
+        metric_prefix = self.metric_prefix(prefix)
+        dashboad = Dashboard(title=metric_prefix)
+
+        row_hosts = Row(title='Hosts Status')
+
+        metric = "%s.%s" % (metric_prefix, HOSTS_METRIC)
+        panel = PanelHost(metric)
+        row_hosts.add_panel(panel)
+
+        # for host_name in self.hosts:
+        #     metric = "%s.%s.%s" % (metric_prefix, HOSTS_METRIC, host_name)
+        #     target = Target(host_name,metric)
+        #     panel = Panel(title=host_name)
+        #     panel.add_target(target)
+        #     row_hosts.add_panel(panel)
+
+        dashboad.add_row(row_hosts)
+
+        for service in services:
+            row_service = Row(title=service)
+            metric = "%s.%s.%s" % (metric_prefix, CONTAINERS_METRIC, service)
+            target = Target(service,metric,type="health_check")
+            panel = Panel(title=service,yaxes_l='ms')
+            panel.add_target(target)
+            row_service.add_panel(panel)
+
+            panel = Panel(title='Memory',yaxes_l = 'decmbytes',yaxes_r='percent')
+            for t in ['mem_limit', 'mem_usage','mem_utilization']:
+                metric = "%s.%s.%s"%(metric_prefix, CONTAINERS_METRIC, service)
+                target = Target(t, metric,type=t)
+                panel.add_target(target)
+            row_service.add_panel(panel)
+
+            panel = Panel(title='CPU Utilization',yaxes_l = 'percent')
+            for t in ['cpu_utilization']:
+                metric = "%s.%s.%s"%(metric_prefix, CONTAINERS_METRIC, service)
+                target = Target(t, metric,type=t)
+                panel.add_target(target)
+            row_service.add_panel(panel)
+
+            dashboad.add_row(row_service)
+        json.dump(dashboad.__dict__,open('%s-dashboard.json'%metric_prefix,'w+'),indent=2)
+
+    def metric_prefix(self, prefix=None):
+        _deployment = self.project.__str__()
+        if prefix:
+            _prefix = prefix if prefix.endswith('.') else prefix + '.'
+        else:
+            _prefix = ""
+        return _prefix + _deployment
+
 
 class ComposeConcrete(ComposeFile):
     def __init__(self, **kwargs):
@@ -254,14 +317,16 @@ class ComposeConcrete(ComposeFile):
                 if service.has_key(key):
                     service.pop(key)
 
-            if self.driver == 'bridge' and service.get('network_mode', '') != 'host':
+            if self.driver == 'bridge' and service.get('network_mode',
+                                                       '') != 'host':
                 if not service.has_key('extra_hosts'):
                     service['extra_hosts'] = {}
                 service['extra_hosts'].update(_extra_hosts)
 
                 # extra_hosts = service.get('extra_hosts',{})
                 # extra_hosts.update(_extra_hosts)
-        yaml.safe_dump(stream_tmp, open(self.docker_compose_file, 'w+'), default_flow_style=False, width=float("inf"))
+        yaml.safe_dump(stream_tmp, open(self.docker_compose_file, 'w+'),
+                       default_flow_style=False, width=float("inf"))
 
     def build_host(self, id='default'):
         try:
@@ -275,12 +340,14 @@ class ComposeConcrete(ComposeFile):
         hostip = self.get_host_ip_by_hostname(service.hostname)
 
         try:
-            container = Container(id=id, service=self.get_service(id), hostip=hostip, project=self.project,
+            container = Container(id=id, service=self.get_service(id),
+                                  hostip=hostip, project=self.project,
                                   docker_compose_file=self.docker_compose_file)
         except KeyError:
             return None
         else:
-            container.client = self.get_host_instance_by_hostname(service.hostname).client
+            container.client = self.get_host_instance_by_hostname(
+                service.hostname).client
             return container
 
     def concrete(self):
@@ -293,7 +360,6 @@ class ComposeConcrete(ComposeFile):
         pool.map(host_connect, host_instances)
         pool.close()
         pool.join()
-
         for service_name in self.services.keys():
             container = self.build_service(service_name)
             self.set_container_instance(container)
@@ -306,7 +372,8 @@ class ComposeConcrete(ComposeFile):
             if ignore_deps is False:
                 depends_all = []
                 for service in services:
-                    container = self.get_container_instance_by_service_name(service)
+                    container = self.get_container_instance_by_service_name(
+                        service)
                     depends_all.extend(container.s_depends_on)
                 services.extend(depends_all)
         services = list(set(services))
@@ -318,7 +385,8 @@ class ComposeConcrete(ComposeFile):
             if host.status != 'running':
                 result.update({service: status_code})
                 continue
-            pool_containers.append(self.get_container_instance_by_service_name(service))
+            pool_containers.append(
+                self.get_container_instance_by_service_name(service))
         if services and len(pool_containers) > 0:
             pool = ThreadPool(len(pool_containers))
             pool.map(Container.ps_thread, pool_containers)
@@ -334,7 +402,8 @@ class ComposeConcrete(ComposeFile):
 
         table_data = []
         table_data.append(
-            ['Service', 'Host', 'Service-Status', 'Image-Status', 'Depends-On', 'Ports', 'Network-Mode'])
+            ['Service', 'Host', 'Service-Status', 'Image-Status', 'Depends-On',
+             'Ports', 'Network-Mode'])
 
         try:
             default_network = self.stream['networks']['default']['driver']
@@ -354,7 +423,8 @@ class ComposeConcrete(ComposeFile):
                 image_status = container._image_status
             depends = ''
             for depend in container.s_depends_on:
-                depend_container = self.get_container_instance_by_service_name(depend)
+                depend_container = self.get_container_instance_by_service_name(
+                    depend)
                 depend_container_color = "- {autobgwhite}{%s}%s{/%s}{/autobgwhite}\n" % (
                     depend_container.color, depend, depend_container.color)
                 depends += (Color(depend_container_color))
@@ -407,7 +477,8 @@ class ComposeConcrete(ComposeFile):
                               ' Connect [%s] error.' % (
                                   service_depends, host.id))
                 return False
-            container_depends = self.get_container_instance_by_service_name(service_depends)
+            container_depends = self.get_container_instance_by_service_name(
+                service_depends)
             container_depends.ps_container()
             container_depends.healthcheck()
             if container_depends.status_code != SERVICE_RUNNING:
@@ -509,10 +580,12 @@ class ComposeConcrete(ComposeFile):
             container.image_history.insert_current()
             container.image_history.show()
             if args.config:
-                sel = raw_input('Press enter to keep the current choics[*], or type index number: ')
+                sel = raw_input(
+                    'Press enter to keep the current choics[*], or type index number: ')
                 if sel == '':
                     return
-                valid_choices = [str(i) for i in range(0, len(container.image_history.content))]
+                valid_choices = [str(i) for i in
+                                 range(0, len(container.image_history.content))]
                 if sel in valid_choices:
                     container.image_history.change_current(int(sel))
                 else:
@@ -526,13 +599,16 @@ class ComposeConcrete(ComposeFile):
         services_list = self.check_service(services, msg='In Inspect:')
         for service_name in services_list:
             host = self.get_host_instance_by_container_id(service_name)
-            service = ComposeService(service_name, self.get_service(service_name))
+            service = ComposeService(service_name,
+                                     self.get_service(service_name))
 
             if host.status != 'running':
-                _results.append(ImageInspect(service=service_name, image=service.image)())
+                _results.append(
+                    ImageInspect(service=service_name, image=service.image)())
                 continue
             else:
-                container = self.get_container_instance_by_service_name(service_name)
+                container = self.get_container_instance_by_service_name(
+                    service_name)
                 _results_async.append(pool.apply_async(container.image_label))
         pool.close()
         pool.join()
@@ -567,13 +643,17 @@ class ComposeConcrete(ComposeFile):
         table_data.append(['Image', 'Service', 'Image-Id', 'Created', 'Labels'])
 
         for key in sorted(_show_tmp.keys()):
-            table_data.append([_show_tmp[key]['image'] + '\n' + _show_tmp[key]['Match'], _show_tmp[key]['service'],
-                               _show_tmp[key]['Id'], _show_tmp[key]['Created'], _show_tmp[key]['Labels']])
+            table_data.append(
+                [_show_tmp[key]['image'] + '\n' + _show_tmp[key]['Match'],
+                 _show_tmp[key]['service'],
+                 _show_tmp[key]['Id'], _show_tmp[key]['Created'],
+                 _show_tmp[key]['Labels']])
         table_instance.inner_heading_row_border = False
         table_instance.inner_row_border = True
         print table_instance.table
 
-    def save(self, suffix, services=None, only_tag=False, only_push=False, no_interaction=False, text=False):
+    def save(self, suffix, services=None, only_tag=False, only_push=False,
+             no_interaction=False, text=False):
 
         if only_tag and only_push:
             print 'please note that. Only one of [--only-tag|--only-push] can be use.'
@@ -591,16 +671,21 @@ class ComposeConcrete(ComposeFile):
         title = '\n  {image:<{longest_image}} | {service:<{longest_service}} | {imageid:<{longest_imageId}} | {match:<{longest_match}}' \
                 '\n  {ind:-<{wedth}}'.format(
             image='Image', service='Service', imageid='Image-Id', match='Match',
-            longest_image=longest_image, longest_service=longest_service, longest_imageId=longest_imageId,
+            longest_image=longest_image, longest_service=longest_service,
+            longest_imageId=longest_imageId,
             longest_match=longest_match,
-            ind='-', wedth=longest_image + longest_service + longest_imageId + longest_match + 9)
+            ind='-',
+            wedth=longest_image + longest_service + longest_imageId + longest_match + 9)
 
         for v in _show:
             table_data.append(
                 '{image:<{longest_image}} | {service:<{longest_service}} | {imageid:<{longest_imageId}} | {match:<{longest_match}}'.format(
-                    image=v['image'], service=v['service'], imageid=v['Id'], match=v['Match'],
+                    image=v['image'], service=v['service'], imageid=v['Id'],
+                    match=v['Match'],
                     longest_image=longest_image,
-                    longest_service=longest_service, longest_imageId=longest_imageId, longest_match=longest_match))
+                    longest_service=longest_service,
+                    longest_imageId=longest_imageId,
+                    longest_match=longest_match))
 
         selected_service = []
         if no_interaction:
@@ -609,7 +694,8 @@ class ComposeConcrete(ComposeFile):
             try:
                 selected = pick(table_data,
                                 'Please choose your images for save (press SPACE to mark, ENTER to continue, Ctrl+C to exit): ' + title,
-                                indicator='*', multi_select=True, min_selection_count=0)
+                                indicator='*', multi_select=True,
+                                min_selection_count=0)
             except KeyboardInterrupt:
                 return
             if selected:
@@ -642,12 +728,11 @@ class ComposeConcrete(ComposeFile):
             else:
                 _action = Color('{autored}%s{/autored}' % (_action))
                 not_ready.append(s)
-            print '{action:<25} {image_old:<{longest_image}} => {image_new:<{longest_image}}'.format(action=_action,
-                                                                                                     longest_image=longest_image,
-                                                                                                     image_old=s[
-                                                                                                         'image'],
-                                                                                                     image_new=s[
-                                                                                                                   'image'] + suffix)
+            print '{action:<25} {image_old:<{longest_image}} => {image_new:<{longest_image}}'.format(
+                action=_action,
+                longest_image=longest_image,
+                image_old=s['image'],
+                image_new=s['image'] + suffix)
         if only_tag:
             _msg = 'Tag these images.'
         elif only_push:
@@ -656,12 +741,14 @@ class ComposeConcrete(ComposeFile):
             _msg = 'Tag and Push these images.'
         if _skip:
             if no_interaction:
-                _msg += Color('\n{autored}These service`s image is not ready, please fix it first.{/autored}')
+                _msg += Color(
+                    '\n{autored}These service`s image is not ready, please fix it first.{/autored}')
 
                 print _msg
                 table_data = []
                 table_instance = SingleTable(table_data, 'Not Ready')
-                table_data.append(['Image', 'Service', 'Image-Id', 'Created', 'Labels'])
+                table_data.append(
+                    ['Image', 'Service', 'Image-Id', 'Created', 'Labels'])
 
                 for s in not_ready:
                     table_data.append(
@@ -680,7 +767,8 @@ class ComposeConcrete(ComposeFile):
             pool = ThreadPool(len(selected_service))
             for s in selected_service:
                 if s['Action'] == 'do':
-                    container = self.get_container_instance_by_service_name(s['service'])
+                    container = self.get_container_instance_by_service_name(
+                        s['service'])
                     pool.apply(container.tag, (suffix,))
             pool.close()
             pool.join()
@@ -693,7 +781,8 @@ class ComposeConcrete(ComposeFile):
         print 'Pushing...'
         for s in selected_service:
             if s['Action'] == 'do':
-                container = self.get_container_instance_by_service_name(s['service'])
+                container = self.get_container_instance_by_service_name(
+                    s['service'])
                 _result.append(pool.apply_async(container.push, (suffix,)))
         pool.close()
         pool.join()
@@ -701,14 +790,17 @@ class ComposeConcrete(ComposeFile):
             print r.get()
         print Color('{autogreen}Push all done.{/autogreen}\n')
         if text:
-            print "#".join(['Image', 'Service', 'Image-Id', 'Created', 'Labels'])
+            print "#".join(
+                ['Image', 'Service', 'Image-Id', 'Created', 'Labels'])
             for s in selected_service:
                 print "#".join((s['image'], s['service'],
-                                s['Id'], s['Created'], s['Labels'].replace('\n', ' ')))
+                                s['Id'], s['Created'],
+                                s['Labels'].replace('\n', ' ')))
         else:
             table_data = []
             table_instance = SingleTable(table_data, 'Done')
-            table_data.append(['Image', 'Service', 'Image-Id', 'Created', 'Labels'])
+            table_data.append(
+                ['Image', 'Service', 'Image-Id', 'Created', 'Labels'])
 
             for s in selected_service:
                 table_data.append(
@@ -720,35 +812,43 @@ class ComposeConcrete(ComposeFile):
         return
 
     def agent(self, services=None, prefix=None, opentsdb_http=None):
-        # services = self.check_service(services)
+        services = self.check_service(services)
+        if services == None:
+            print 'None Services'
+            return
         self.ps(services, ignore_deps=True)
-        _deployment = self.project
-        if prefix:
-            _prefix = prefix if prefix.endswith('.') else prefix + '.'
-        else:
-            _prefix = ""
-
-        sender=self._sender
-
+        sender = self._sender
         if opentsdb_http != None:
             sender = OpenTSDB_Sender(server=opentsdb_http).send
 
         data = []
-        for host_name, host_instance in self.hosts_instance.items():
-            data.append(self._message("%s%s.hosts.%s" % (_prefix, _deployment, host_name), host_instance.status_code,
-                                host=host_name))
+        metric_prefix = self.metric_prefix(prefix)
 
-        for service_name, container in self._containers.items():
-            data.append(self._message("%s%s.containers.%s" % (_prefix, _deployment, service_name), container.exec_time,
-                                host=container.hostname, container=service_name))
-            data.append(self._message("%s%s.containers.%s.mem_limit" % (_prefix, _deployment, service_name), container.mem_limit,
-                                host=container.hostname, container=service_name))
-            data.append(self._message("%s%s.containers.%s.mem_usage" % (_prefix, _deployment, service_name), container.mem_usage,
-                                host=container.hostname, container=service_name))
-            data.append(self._message("%s%s.containers.%s.mem_percent" % (_prefix, _deployment, service_name), container.mem_percent,
-                                host=container.hostname, container=service_name))
-            data.append(self._message("%s%s.containers.%s.cpu_percent" % (_prefix, _deployment, service_name), container.cpu_percent,
-                                host=container.hostname, container=service_name))
+        for host_name, host_instance in self.hosts_instance.items():
+            # metric = "%s.%s.%s" % (metric_prefix, HOSTS_METRIC, host_name)
+            metric = "%s.%s" % (metric_prefix, HOSTS_METRIC)
+            data.append(self._message(metric,
+                                      value=host_instance.status_code,
+                                      host=host_name))
+        for service_name in services:
+            container = self.get_container_instance_by_service_name(service_name)
+            metric = "%s.%s.%s" % (
+            metric_prefix, CONTAINERS_METRIC, service_name)
+            data.append(self._message(metric,
+                                      value=container.exec_time,
+                                      host=container.hostname,
+                                      container=service_name,
+                                      type="health_check"))
+
+            for t in ['mem_limit', 'mem_usage', 'mem_utilization', 'cpu_utilization']:
+                metric = "%s.%s.%s" % (
+                metric_prefix, CONTAINERS_METRIC, service_name)
+                data.append(self._message(metric,
+                                          value=getattr(container, t),
+                                          host=container.hostname,
+                                          container=service_name,
+                                          type=t))
+
         sender(data)
         sys.stdout.flush()
 
@@ -764,7 +864,7 @@ class ComposeConcrete(ComposeFile):
                                                         tags=' '.join(tags))
 
     @classmethod
-    def _sender(cls,lines):
+    def _sender(cls, lines):
         for line in lines:
             print line
 
@@ -779,7 +879,8 @@ class ComposeConcrete(ComposeFile):
             if host.status != 'running':
                 result.update({service: help_context})
                 continue
-            pool_containers.append(self.get_container_instance_by_service_name(service))
+            pool_containers.append(
+                self.get_container_instance_by_service_name(service))
         if services and len(pool_containers) > 0:
             pool = ThreadPool(len(pool_containers))
             for container in pool_containers:
@@ -791,8 +892,8 @@ class ComposeConcrete(ComposeFile):
         for container in pool_containers:
             result.update({container.id: container.help_context})
 
-        for k,res in result.items():
-            print "%s Help:"%k
+        for k, res in result.items():
+            print "%s Help:" % k
             for l in res.split('\n'):
-                print "  ",l
+                print "  ", l
             print "End\n"
