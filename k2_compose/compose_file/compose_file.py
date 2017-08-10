@@ -836,8 +836,6 @@ class ComposeConcrete(ComposeFile):
             metric_prefix, CONTAINERS_METRIC, service_name)
             data.append(self._message(metric,
                                       value=container.exec_time,
-                                      host=container.hostname,
-                                      container=service_name,
                                       type="health_check"))
 
             for t in ['mem_limit', 'mem_usage', 'mem_utilization', 'cpu_utilization']:
@@ -845,8 +843,6 @@ class ComposeConcrete(ComposeFile):
                 metric_prefix, CONTAINERS_METRIC, service_name)
                 data.append(self._message(metric,
                                           value=getattr(container, t),
-                                          host=container.hostname,
-                                          container=service_name,
                                           type=t))
 
         sender(data)
