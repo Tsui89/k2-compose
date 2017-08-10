@@ -216,7 +216,7 @@ class ComposeFile(object):
         dashboad = Dashboard(title=metric_prefix)
 
         row_hosts = Row(title='Hosts Status')
-        row_hosts.height='100px'
+        row_hosts.height='150px'
 
         metric = "%s.%s" % (metric_prefix, HOSTS_METRIC)
         for host in self.hosts:
@@ -225,7 +225,7 @@ class ComposeFile(object):
 
         dashboad.add_row(row_hosts)
         row_services = Row(title='Services Status')
-        row_services.height='100px'
+        row_services.height='150px'
         for service in services:
             metric = "%s.%s" % (metric_prefix, SERVICES_METRIC)
             panel = PanelNew(title=service,measurement=metric,value=service,key='service')
