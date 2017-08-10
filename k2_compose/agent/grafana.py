@@ -181,7 +181,7 @@ class PanelNew(object):
                   "to": "null"
                 }
               ],
-              "span": 1,
+              "span": 2,
               "sparkline": {
                 "fillColor": "rgba(31, 118, 189, 0.18)",
                 "full": False,
