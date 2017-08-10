@@ -2,7 +2,7 @@ PANEL_ID = 1
 
 
 class Target(object):
-    def __init__(self, alias=None,measurement=None):
+    def __init__(self, alias=None,measurement=None,type=""):
         self.__dict__.update(
             {
                 "alias": alias,
@@ -38,6 +38,13 @@ class Target(object):
                             "type": "mean"
                         }
                     ]
+                ],
+                "tags": [
+                    {
+                        "key": "type",
+                        "operator": "=",
+                        "value": type
+                    }
                 ]
             }
         )
@@ -126,6 +133,7 @@ class PanelBase(object):
             }
         )
         self.targets=[]
+
 
 class PanelHost(object):
     def __init__(self,measurement):

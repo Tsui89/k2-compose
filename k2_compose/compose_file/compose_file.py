@@ -233,22 +233,22 @@ class ComposeFile(object):
         for service in services:
             row_service = Row(title=service)
             metric = "%s.%s.%s" % (metric_prefix, CONTAINERS_METRIC, service)
-            target = Target(service,metric)
+            target = Target(service,metric,type="health_check")
             panel = Panel(title=service,yaxes_l='ms')
             panel.add_target(target)
             row_service.add_panel(panel)
 
             panel = Panel(title='Memory',yaxes_l = 'decmbytes',yaxes_r='percent')
             for t in ['mem_limit', 'mem_usage','mem_utilization']:
-                metric = "%s.%s.%s.%s"%(metric_prefix, CONTAINERS_METRIC, service, t)
-                target = Target(t, metric)
+                metric = "%s.%s.%s"%(metric_prefix, CONTAINERS_METRIC, service)
+                target = Target(t, metric,type=t)
                 panel.add_target(target)
             row_service.add_panel(panel)
 
             panel = Panel(title='CPU Utilization',yaxes_l = 'percent')
             for t in ['cpu_utilization']:
-                metric = "%s.%s.%s.%s"%(metric_prefix, CONTAINERS_METRIC, service, t)
-                target = Target(t, metric)
+                metric = "%s.%s.%s"%(metric_prefix, CONTAINERS_METRIC, service)
+                target = Target(t, metric,type=t)
                 panel.add_target(target)
             row_service.add_panel(panel)
 
@@ -814,7 +814,7 @@ class ComposeConcrete(ComposeFile):
     def agent(self, services=None, prefix=None, opentsdb_http=None):
         services = self.check_service(services)
         if services == None:
-            print 'None'
+            print 'None Services'
             return
         self.ps(services, ignore_deps=True)
         sender = self._sender
@@ -837,15 +837,17 @@ class ComposeConcrete(ComposeFile):
             data.append(self._message(metric,
                                       value=container.exec_time,
                                       host=container.hostname,
-                                      container=service_name))
+                                      container=service_name,
+                                      type="health_check"))
 
             for t in ['mem_limit', 'mem_usage', 'mem_utilization', 'cpu_utilization']:
-                metric = "%s.%s.%s.%s" % (
-                metric_prefix, CONTAINERS_METRIC, service_name, t)
+                metric = "%s.%s.%s" % (
+                metric_prefix, CONTAINERS_METRIC, service_name)
                 data.append(self._message(metric,
                                           value=getattr(container, t),
                                           host=container.hostname,
-                                          container=service_name))
+                                          container=service_name,
+                                          type=t))
 
         sender(data)
         sys.stdout.flush()
