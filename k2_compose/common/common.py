@@ -37,6 +37,7 @@ HEALTH_CHECK_EXEC_TIME_ERROR_DEFAULT=-10
 DEBUG = False
 
 HOSTS_METRIC = 'hosts'
+SERVICES_METRIC = 'services'
 CONTAINERS_METRIC = 'containers'
 
 from os import getenv

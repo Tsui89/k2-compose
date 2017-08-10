@@ -216,19 +216,21 @@ class ComposeFile(object):
         dashboad = Dashboard(title=metric_prefix)
 
         row_hosts = Row(title='Hosts Status')
+        row_hosts.height='100px'
 
         metric = "%s.%s" % (metric_prefix, HOSTS_METRIC)
-        panel = PanelHost(metric)
-        row_hosts.add_panel(panel)
-
-        # for host_name in self.hosts:
-        #     metric = "%s.%s.%s" % (metric_prefix, HOSTS_METRIC, host_name)
-        #     target = Target(host_name,metric)
-        #     panel = Panel(title=host_name)
-        #     panel.add_target(target)
-        #     row_hosts.add_panel(panel)
+        for host in self.hosts:
+            panel = PanelNew(title=host,measurement=metric,value=host,key='host')
+            row_hosts.add_panel(panel)
 
         dashboad.add_row(row_hosts)
+        row_services = Row(title='Services Status')
+        row_services.height='100px'
+        for service in services:
+            metric = "%s.%s" % (metric_prefix, SERVICES_METRIC)
+            panel = PanelNew(title=service,measurement=metric,value=service,key='service')
+            row_services.add_panel(panel)
+        dashboad.add_row(row_services)
 
         for service in services:
             row_service = Row(title=service)
@@ -830,8 +832,16 @@ class ComposeConcrete(ComposeFile):
             data.append(self._message(metric,
                                       value=host_instance.status_code,
                                       host=host_name))
+
         for service_name in services:
             container = self.get_container_instance_by_service_name(service_name)
+
+            metric = "%s.%s" % (
+            metric_prefix, SERVICES_METRIC)
+            data.append(self._message(metric,
+                                      value= 1 if container.exec_time>=0 else 0,
+                                      service=service_name))
+
             metric = "%s.%s.%s" % (
             metric_prefix, CONTAINERS_METRIC, service_name)
             data.append(self._message(metric,

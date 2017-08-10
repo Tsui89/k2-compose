@@ -83,7 +83,7 @@ class PanelBase(object):
                 "lines": True,
                 "linewidth": 1,
                 "links": [],
-                "NonePointMode": "connected",
+                "nullPointMode": "connected",
                 "percentage": False,
                 "pointradius": 5,
                 "points": False,
@@ -117,7 +117,7 @@ class PanelBase(object):
                         "label": None,
                         "logBase": 1,
                         "max": None,
-                        "min": 0,
+                        "min": None,
                         "show": True
                     },
                     {
@@ -135,114 +135,114 @@ class PanelBase(object):
         self.targets=[]
 
 
-class PanelHost(object):
-    def __init__(self,measurement):
+class PanelNew(object):
+    def __init__(self, title, measurement, value, key='host'):
         self.__dict__.update(
             {
-                "aliasColors": {},
-                "bars": True,
-                "datasource": "${DS_INFLUXPROD}",
-                "fill": 1,
-                "id": 1,
-                "legend": {
-                    "avg": False,
-                    "current": False,
-                    "max": False,
-                    "min": False,
-                    "show": False,
-                    "total": False,
-                    "values": False
+              "cacheTimeout": None,
+              "colorBackground": True,
+              "colorValue": False,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "datasource": "${DS_INFLUXPROD}",
+              "format": "none",
+              "id": 1,
+              "interval": None,
+              "links": [],
+              "mappingType": 1,
+              "mappingTypes": [
+                {
+                  "name": "value to text",
+                  "value": 1
                 },
-                "lines": False,
-                "linewidth": 1,
-                "links": [],
-                "NonePointMode": "None",
-                "percentage": False,
-                "pointradius": 5,
-                "points": False,
-                "renderer": "flot",
-                "seriesOverrides": [],
-                "span": 12,
-                "stack": False,
-                "steppedLine": False,
-                "targets": [
-                    {
-                        "alias": "$tag_host",
-                        "dsType": "influxdb",
-                        "groupBy": [
-                            {
-                                "params": [
-                                    "$__interval"
-                                ],
-                                "type": "time"
-                            },
-                            {
-                                "params": [
-                                    "none"
-                                ],
-                                "type": "fill"
-                            }
-                        ],
-                        "policy": "default",
-                        "query": "SELECT \"value\" FROM \"%s\" WHERE $timeFilter GROUP BY \"host\""%(measurement),
-                        "rawQuery": True,
-                        "refId": "A",
-                        "resultFormat": "time_series",
-                        "select": [
-                            [
-                                {
-                                    "params": [
-                                        "value"
-                                    ],
-                                    "type": "field"
-                                },
-                                {
-                                    "params": [],
-                                    "type": "mean"
-                                }
-                            ]
-                        ],
-                        "tags": []
-                    }
-                ],
-                "thresholds": [],
-                "timeFrom": None,
-                "timeShift": None,
-                "title": "Host Health",
-                "tooltip": {
-                    "shared": False,
-                    "sort": 0,
-                    "value_type": "individual"
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              "maxDataPoints": 1,
+              "nullPointMode": "connected",
+              "nullText": None,
+              "postfix": "",
+              "postfixFontSize": "50%",
+              "prefix": "",
+              "prefixFontSize": "50%",
+              "rangeMaps": [
+                {
+                  "from": "1",
+                  "text": "OK",
+                  "to": "null"
                 },
-                "type": "graph",
-                "xaxis": {
-                    "mode": "series",
-                    "name": None,
-                    "show": True,
-                    "values": [
-                        "current"
+                {
+                  "from": "0",
+                  "text": "ORR",
+                  "to": "null"
+                }
+              ],
+              "span": 1,
+              "sparkline": {
+                "fillColor": "rgba(31, 118, 189, 0.18)",
+                "full": False,
+                "lineColor": "rgb(31, 120, 193)",
+                "show": False
+              },
+              "tableColumn": "",
+              "targets": [
+                {
+                  "dsType": "influxdb",
+                  "policy": "default",
+
+                  "measurement":measurement,
+                  "query": "SELECT last(\"value\") FROM \"%s\" WHERE \"%s\"=\'%s\'"%(measurement, key, value),
+                  "rawQuery": True,
+                  "refId": "A",
+                  "resultFormat": "time_series",
+                  "select": [
+                    [
+                      {
+                        "params": [
+                          "value"
+                        ],
+                        "type": "field"
+                      },
+                      {
+                        "params": [],
+                        "type": "last"
+                      }
                     ]
+                  ],
+                  "tags": [
+                      {
+                          "key": key,
+                          "operator": "=",
+                          "value": value
+                      }
+                  ]
+                }
+              ],
+              "thresholds": "0.9,1.2",
+              "title": title,
+              "type": "singlestat",
+              "valueFontSize": "80%",
+              "valueMaps": [
+                {
+                  "op": "=",
+                  "text": "ERR",
+                  "value": "0"
                 },
-                "yaxes": [
-                    {
-                        "format": "short",
-                        "label": None,
-                        "logBase": 1,
-                        "max": None,
-                        "min": None,
-                        "show": True
-                    },
-                    {
-                        "format": "short",
-                        "label": None,
-                        "logBase": 1,
-                        "max": None,
-                        "min": None,
-                        "show": True
-                    }
-                ]
+                {
+                  "op": "=",
+                  "text": "OK",
+                  "value": "1"
+                }
+              ],
+              "valueName": "avg"
             }
         )
+
+
 class RowBase(object):
     def __init__(self,title):
         self.__dict__.update(
