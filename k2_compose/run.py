@@ -223,10 +223,9 @@ class K2Platform:
     @classmethod
     def agent(cls, args):
         logging.debug('k2-compose agent')
-        if args.create_grafana_dashboard:
-            compose = ComposeFile(filename=args.file, url=args.url)
-            compose.create_grafana_dashbord(services=args.services,
-                                            prefix=args.prefix)
+        compose = ComposeFile(filename=args.file, url=args.url)
+        compose.create_grafana_dashbord(services=args.services,
+                                        prefix=args.prefix)
         sleep_time = int(args.interval) if args.interval else 30
         while True:
             try:
@@ -487,11 +486,6 @@ class Cmdline:
         parser.add_argument(
             '--opentsdb-http',
             help='opentsdb server http api, eg: 106.120.241.178:4242'
-        )
-        parser.add_argument(
-            '--create-grafana-dashboard',
-            action='store_true',
-            help='create grafana dashboard.'
         )
 
     @classmethod

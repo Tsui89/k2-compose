@@ -137,9 +137,9 @@ class Container(ComposeService):
 
         self.help_context = "\n"
         self.mem_limit = 0
-        self.mem_percent = 0
+        self.mem_utilization = 0
         self.mem_usage = 0
-        self.cpu_percent = 0
+        self.cpu_utilization = 0
         self.net_in = 0
         self.net_out = 0
     @property
@@ -180,7 +180,7 @@ class Container(ComposeService):
         # print stats['networks']
         mem_limit = stats['memory_stats']['limit']
         mem_usage = stats['memory_stats']['usage']
-        self.mem_percent = round(float(
+        self.mem_utilization = round(float(
             stats['memory_stats']['usage'] * 100) / mem_limit, 2)
         cpu_delta = float(stats['cpu_stats']['cpu_usage']['total_usage']
                           - stats['precpu_stats']['cpu_usage'][
@@ -190,7 +190,7 @@ class Container(ComposeService):
                 'system_cpu_usage'])
         processor_num = len(stats['cpu_stats']['cpu_usage']['percpu_usage'])
         if cpu_delta > 0.0 and system_delta > 0.0:
-            self.cpu_percent = round((cpu_delta / system_delta) * processor_num * 100.0,2)
+            self.cpu_utilization = round((cpu_delta / system_delta) * processor_num * 100.0,2)
         self.mem_limit = round(float(mem_limit * 1.0 / 1024 / 1024),2) #MB
         self.mem_usage = round(float(mem_usage * 1.0 / 1024 / 1024),2) #MB
 

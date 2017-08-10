@@ -1,3 +1,6 @@
+PANEL_ID = 1
+
+
 class Target(object):
     def __init__(self, alias=None,measurement=None):
         self.__dict__.update(
@@ -13,7 +16,7 @@ class Target(object):
                     },
                     {
                         "params": [
-                            "null"
+                            "none"
                         ],
                         "type": "fill"
                     }
@@ -59,23 +62,31 @@ class PanelBase(object):
                 "id": 1,
                 "isNew": True,
                 "legend": {
-                    "avg": False,
+                    "alignAsTable": False,
+                    "avg": True,
                     "current": False,
-                    "max": False,
-                    "min": False,
+                    "max": True,
+                    "min": True,
                     "show": True,
+                    "sort": "current",
+                    "sortDesc": True,
                     "total": False,
-                    "values": False
+                    "values": True
                 },
                 "lines": True,
                 "linewidth": 1,
                 "links": [],
-                "nullPointMode": "connected",
+                "NonePointMode": "connected",
                 "percentage": False,
                 "pointradius": 5,
                 "points": False,
                 "renderer": "flot",
-                "seriesOverrides": [],
+                "seriesOverrides": [
+                  {
+                    "alias": "mem_utilization",
+                    "yaxis": 2
+                  }
+                ],
                 "span": 4,
                 "stack": False,
                 "steppedLine": False,
@@ -116,18 +127,126 @@ class PanelBase(object):
         )
         self.targets=[]
 
-
+class PanelHost(object):
+    def __init__(self,measurement):
+        self.__dict__.update(
+            {
+                "aliasColors": {},
+                "bars": True,
+                "datasource": "${DS_INFLUXPROD}",
+                "fill": 1,
+                "id": 1,
+                "legend": {
+                    "avg": False,
+                    "current": False,
+                    "max": False,
+                    "min": False,
+                    "show": False,
+                    "total": False,
+                    "values": False
+                },
+                "lines": False,
+                "linewidth": 1,
+                "links": [],
+                "NonePointMode": "None",
+                "percentage": False,
+                "pointradius": 5,
+                "points": False,
+                "renderer": "flot",
+                "seriesOverrides": [],
+                "span": 12,
+                "stack": False,
+                "steppedLine": False,
+                "targets": [
+                    {
+                        "alias": "$tag_host",
+                        "dsType": "influxdb",
+                        "groupBy": [
+                            {
+                                "params": [
+                                    "$__interval"
+                                ],
+                                "type": "time"
+                            },
+                            {
+                                "params": [
+                                    "none"
+                                ],
+                                "type": "fill"
+                            }
+                        ],
+                        "policy": "default",
+                        "query": "SELECT \"value\" FROM \"%s\" WHERE $timeFilter GROUP BY \"host\""%(measurement),
+                        "rawQuery": True,
+                        "refId": "A",
+                        "resultFormat": "time_series",
+                        "select": [
+                            [
+                                {
+                                    "params": [
+                                        "value"
+                                    ],
+                                    "type": "field"
+                                },
+                                {
+                                    "params": [],
+                                    "type": "mean"
+                                }
+                            ]
+                        ],
+                        "tags": []
+                    }
+                ],
+                "thresholds": [],
+                "timeFrom": None,
+                "timeShift": None,
+                "title": "Host Health",
+                "tooltip": {
+                    "shared": False,
+                    "sort": 0,
+                    "value_type": "individual"
+                },
+                "type": "graph",
+                "xaxis": {
+                    "mode": "series",
+                    "name": None,
+                    "show": True,
+                    "values": [
+                        "current"
+                    ]
+                },
+                "yaxes": [
+                    {
+                        "format": "short",
+                        "label": None,
+                        "logBase": 1,
+                        "max": None,
+                        "min": None,
+                        "show": True
+                    },
+                    {
+                        "format": "short",
+                        "label": None,
+                        "logBase": 1,
+                        "max": None,
+                        "min": None,
+                        "show": True
+                    }
+                ]
+            }
+        )
 class RowBase(object):
     def __init__(self,title):
         self.__dict__.update(
             {
-                "collapse": False,
+                "collapse": True,
                 "editable": True,
                 "height": "250px",
                 "showTitle": True,
                 "title": title
             }
         )
+        self.id = 1
         self.panels=[]
 
 
@@ -202,32 +321,31 @@ class DashboardBase(object):
 class Dashboard(DashboardBase):
     def __init__(self, title):
         super(Dashboard,self).__init__(title)
-        self._row_id = 1
 
     def add_row(self, row):
-        row.id = self._row_id
-        self._row_id += 1
         self.rows.append(row.__dict__)
 
 
 class Row(RowBase):
+
     def __init__(self, title):
         super(Row,self).__init__(title)
-        self._panel_id = 1
 
     def add_panel(self, panel):
-        panel.id = self._panel_id
-        self._panel_id += 1
+        global PANEL_ID
+        panel.id = PANEL_ID
+        PANEL_ID += 1
         self.panels.append(panel.__dict__)
 
 
 class Panel(PanelBase):
+    __refid = 65
+
     def __init__(self, title=None, yaxes_l='short', yaxes_r='short'):
         super(Panel,self).__init__(title,yaxes_l,yaxes_r)
         self.title = title
-        self._refId = 65
 
     def add_target(self, target):
-        target.refId = chr(self._refId)
-        self._refId += 1
+        target.refId = chr(self.__refid)
+        self.__refid += 1
         self.targets.append(target.__dict__)

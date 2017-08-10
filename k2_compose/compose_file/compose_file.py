@@ -216,13 +216,20 @@ class ComposeFile(object):
         dashboad = Dashboard(title=metric_prefix)
 
         row_hosts = Row(title='Hosts Status')
-        for host_name in self.hosts:
-            metric = "%s.%s.%s" % (metric_prefix, HOSTS_METRIC, host_name)
-            target = Target(host_name,metric)
-            panel = Panel(title=host_name)
-            panel.add_target(target)
-            row_hosts.add_panel(panel)
+
+        metric = "%s.%s" % (metric_prefix, HOSTS_METRIC)
+        panel = PanelHost(metric)
+        row_hosts.add_panel(panel)
+
+        # for host_name in self.hosts:
+        #     metric = "%s.%s.%s" % (metric_prefix, HOSTS_METRIC, host_name)
+        #     target = Target(host_name,metric)
+        #     panel = Panel(title=host_name)
+        #     panel.add_target(target)
+        #     row_hosts.add_panel(panel)
+
         dashboad.add_row(row_hosts)
+
         for service in services:
             row_service = Row(title=service)
             metric = "%s.%s.%s" % (metric_prefix, CONTAINERS_METRIC, service)
@@ -231,17 +238,17 @@ class ComposeFile(object):
             panel.add_target(target)
             row_service.add_panel(panel)
 
-            panel = Panel(title='Memory',yaxes_l = 'decmbytes')
-            for t in ['mem_limit', 'mem_usage']:
+            panel = Panel(title='Memory',yaxes_l = 'decmbytes',yaxes_r='percent')
+            for t in ['mem_limit', 'mem_usage','mem_utilization']:
                 metric = "%s.%s.%s.%s"%(metric_prefix, CONTAINERS_METRIC, service, t)
-                target = Target(service + t, metric)
+                target = Target(t, metric)
                 panel.add_target(target)
             row_service.add_panel(panel)
 
-            panel = Panel(title='Usage Percent',yaxes_l = 'percent')
-            for t in ['mem_percent', 'cpu_percent']:
+            panel = Panel(title='CPU Utilization',yaxes_l = 'percent')
+            for t in ['cpu_utilization']:
                 metric = "%s.%s.%s.%s"%(metric_prefix, CONTAINERS_METRIC, service, t)
-                target = Target(service + t, metric)
+                target = Target(t, metric)
                 panel.add_target(target)
             row_service.add_panel(panel)
 
@@ -818,7 +825,8 @@ class ComposeConcrete(ComposeFile):
         metric_prefix = self.metric_prefix(prefix)
 
         for host_name, host_instance in self.hosts_instance.items():
-            metric = "%s.%s.%s" % (metric_prefix, HOSTS_METRIC, host_name)
+            # metric = "%s.%s.%s" % (metric_prefix, HOSTS_METRIC, host_name)
+            metric = "%s.%s" % (metric_prefix, HOSTS_METRIC)
             data.append(self._message(metric,
                                       value=host_instance.status_code,
                                       host=host_name))
@@ -831,7 +839,7 @@ class ComposeConcrete(ComposeFile):
                                       host=container.hostname,
                                       container=service_name))
 
-            for t in ['mem_limit', 'mem_usage', 'mem_percent', 'cpu_percent']:
+            for t in ['mem_limit', 'mem_usage', 'mem_utilization', 'cpu_utilization']:
                 metric = "%s.%s.%s.%s" % (
                 metric_prefix, CONTAINERS_METRIC, service_name, t)
                 data.append(self._message(metric,
