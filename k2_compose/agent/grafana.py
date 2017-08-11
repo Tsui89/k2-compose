@@ -136,7 +136,7 @@ class PanelBase(object):
 
 
 class PanelNew(object):
-    def __init__(self, title, measurement, key, value, description=None,interval=30):
+    def __init__(self, title, measurement, key, value, description=None,delay=30):
         self.__dict__.update(
             {
               "cacheTimeout": None,
@@ -212,7 +212,7 @@ class PanelNew(object):
                   "policy": "default",
 
                   "measurement":measurement,
-                  "query": "SELECT last(\"value\") FROM \"%s\" WHERE \"%s\"=\'%s\' AND time > now() - %ds"%(measurement, key, value,interval),
+                  "query": "SELECT last(\"value\") FROM \"%s\" WHERE \"%s\"=\'%s\' AND time > now() - %ds"%(measurement, key, value,delay),
                   "rawQuery": True,
                   "refId": "A",
                   "resultFormat": "time_series",

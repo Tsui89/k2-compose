@@ -228,7 +228,7 @@ class K2Platform:
         compose = ComposeFile(filename=args.file, url=args.url)
         compose.create_grafana_dashbord(services=args.services,
                                         prefix=args.prefix,
-                                        interval=sleep_time)
+                                        delay=int(args.delay))
         while True:
             try:
                 k2compose = K2ComposeCMD(ComposeConcrete(filename=args.file, url=args.url))
@@ -488,6 +488,11 @@ class Cmdline:
         parser.add_argument(
             '--opentsdb-http',
             help='opentsdb server http api, eg: 106.120.241.178:4242'
+        )
+        parser.add_argument(
+            '--delay',
+            default=60,
+            help="maximum allowable delay, unit: seconds, default 60s"
         )
 
     @classmethod

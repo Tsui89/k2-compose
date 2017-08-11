@@ -210,7 +210,7 @@ class ComposeFile(object):
         table_instance.inner_row_border = True
         print table_instance.table
 
-    def create_grafana_dashbord(self, services=None, prefix=None,interval=30):
+    def create_grafana_dashbord(self, services=None, prefix=None,delay=30):
         services = self.check_service(services)
         metric_prefix = self.metric_prefix(prefix)
         dashboad = Dashboard(title=metric_prefix)
@@ -224,7 +224,7 @@ class ComposeFile(object):
             panel = PanelNew(title=host,measurement=metric,
                              value=host,key='host',
                              description=description,
-                             interval=interval)
+                             delay=delay)
             row_hosts.add_panel(panel)
 
         dashboad.add_row(row_hosts)
@@ -233,7 +233,7 @@ class ComposeFile(object):
         for service in services:
             metric = "%s.%s" % (metric_prefix, SERVICES_METRIC)
             panel = PanelNew(title=service,measurement=metric,
-                             value=service,key='service',interval=interval)
+                             value=service,key='service',delay=delay)
             row_services.add_panel(panel)
         dashboad.add_row(row_services)
 
