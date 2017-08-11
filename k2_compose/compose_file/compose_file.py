@@ -210,7 +210,7 @@ class ComposeFile(object):
         table_instance.inner_row_border = True
         print table_instance.table
 
-    def create_grafana_dashbord(self, services=None, prefix=None):
+    def create_grafana_dashbord(self, services=None, prefix=None,interval=30):
         services = self.check_service(services)
         metric_prefix = self.metric_prefix(prefix)
         dashboad = Dashboard(title=metric_prefix)
@@ -220,7 +220,11 @@ class ComposeFile(object):
 
         metric = "%s.%s" % (metric_prefix, HOSTS_METRIC)
         for host in self.hosts:
-            panel = PanelNew(title=host,measurement=metric,value=host,key='host')
+            description =self.hosts[host] if self.hosts[host].startswith('unix') else self.hosts[host].rstrip(':')
+            panel = PanelNew(title=host,measurement=metric,
+                             value=host,key='host',
+                             description=description,
+                             interval=interval)
             row_hosts.add_panel(panel)
 
         dashboad.add_row(row_hosts)
@@ -228,12 +232,13 @@ class ComposeFile(object):
         row_services.height='90px'
         for service in services:
             metric = "%s.%s" % (metric_prefix, SERVICES_METRIC)
-            panel = PanelNew(title=service,measurement=metric,value=service,key='service')
+            panel = PanelNew(title=service,measurement=metric,
+                             value=service,key='service',interval=interval)
             row_services.add_panel(panel)
         dashboad.add_row(row_services)
 
         for service in services:
-            row_service = Row(title=service)
+            row_service = Row(title='Container '+service)
             metric = "%s.%s.%s" % (metric_prefix, CONTAINERS_METRIC, service)
             target = Target(service,metric,type="health_check")
             panel = Panel(title=service,yaxes_l='ms')
@@ -827,19 +832,26 @@ class ComposeConcrete(ComposeFile):
         metric_prefix = self.metric_prefix(prefix)
 
         for host_name, host_instance in self.hosts_instance.items():
-            # metric = "%s.%s.%s" % (metric_prefix, HOSTS_METRIC, host_name)
             metric = "%s.%s" % (metric_prefix, HOSTS_METRIC)
             data.append(self._message(metric,
-                                      value=host_instance.status_code,
+                                      value=1 if host_instance.status_code == 0 else 3,
                                       host=host_name))
 
         for service_name in services:
             container = self.get_container_instance_by_service_name(service_name)
 
-            metric = "%s.%s" % (
-            metric_prefix, SERVICES_METRIC)
+            metric = "%s.%s" % (metric_prefix, SERVICES_METRIC)
+
+            if container.exec_time == HEALTH_CHECK_EXEC_TIME_UNDEPLOYED:
+                value = SERVICE_UNDEPLOYED
+            elif container.exec_time == HEALTH_CHECK_EXEC_TIME_STOPPED:
+                value = SERVICE_STOP
+            elif container.exec_time >= 0:
+                value = SERVICE_RUNNING
+            else:
+                value = SERVICE_ERROR
             data.append(self._message(metric,
-                                      value= 1 if container.exec_time>=0 else 0,
+                                      value=value,
                                       service=service_name))
 
             metric = "%s.%s.%s" % (

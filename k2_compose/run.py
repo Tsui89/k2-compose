@@ -223,10 +223,12 @@ class K2Platform:
     @classmethod
     def agent(cls, args):
         logging.debug('k2-compose agent')
+
+        sleep_time = int(args.interval) if args.interval else 30
         compose = ComposeFile(filename=args.file, url=args.url)
         compose.create_grafana_dashbord(services=args.services,
-                                        prefix=args.prefix)
-        sleep_time = int(args.interval) if args.interval else 30
+                                        prefix=args.prefix,
+                                        interval=sleep_time)
         while True:
             try:
                 k2compose = K2ComposeCMD(ComposeConcrete(filename=args.file, url=args.url))

@@ -136,7 +136,7 @@ class PanelBase(object):
 
 
 class PanelNew(object):
-    def __init__(self, title, measurement, value, key='host'):
+    def __init__(self, title, measurement, key, value, description=None,interval=30):
         self.__dict__.update(
             {
               "cacheTimeout": None,
@@ -144,8 +144,10 @@ class PanelNew(object):
               "colorValue": False,
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
+                "rgba(227, 233, 40, 0.86)",
                 "rgba(50, 172, 45, 0.97)"
               ],
+              "description":description,
               "datasource": "${DS_INFLUXPROD}",
               "format": "none",
               "id": 1,
@@ -171,15 +173,30 @@ class PanelNew(object):
               "prefixFontSize": "50%",
               "rangeMaps": [
                 {
-                  "from": "1",
-                  "text": "OK",
+                  "from": "0",
+                  "text": "undeployed",
                   "to": "null"
                 },
                 {
-                  "from": "0",
-                  "text": "ORR",
+                  "from": "1",
+                  "text": "stopped",
                   "to": "null"
-                }
+                },
+                  {
+                      "from": "2",
+                      "text": "error",
+                      "to": "null"
+                  },
+                  {
+                      "from": "3",
+                      "text": "running",
+                      "to": "null"
+                  },
+                  {
+                      "from": "null",
+                      "text": "no value",
+                      "to": "null"
+                  }
               ],
               "span": 2,
               "sparkline": {
@@ -195,7 +212,7 @@ class PanelNew(object):
                   "policy": "default",
 
                   "measurement":measurement,
-                  "query": "SELECT last(\"value\") FROM \"%s\" WHERE \"%s\"=\'%s\'"%(measurement, key, value),
+                  "query": "SELECT last(\"value\") FROM \"%s\" WHERE \"%s\"=\'%s\' AND time > now() - %ds"%(measurement, key, value,interval),
                   "rawQuery": True,
                   "refId": "A",
                   "resultFormat": "time_series",
@@ -222,21 +239,36 @@ class PanelNew(object):
                   ]
                 }
               ],
-              "thresholds": "0.9,1.2",
+              "thresholds": "2,2",
               "title": title,
               "type": "singlestat",
-              "valueFontSize": "80%",
+              "valueFontSize": "50%",
               "valueMaps": [
                 {
                   "op": "=",
-                  "text": "ERR",
+                  "text": "undeployed",
                   "value": "0"
                 },
                 {
                   "op": "=",
-                  "text": "OK",
+                  "text": "stopped",
                   "value": "1"
-                }
+                },
+                {
+                  "op": "=",
+                  "text": "error",
+                  "value": "2"
+                },
+                {
+                  "op": "=",
+                  "text": "running",
+                  "value": "3"
+                },
+                  {
+                      "op": "=",
+                      "text": "no value",
+                      "value": "null"
+                  }
               ],
               "valueName": "avg"
             }
