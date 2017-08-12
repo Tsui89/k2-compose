@@ -1,5 +1,5 @@
 
-#### 最新版本0.1.2
+#### 最新版本0.1.7
 
 #### 简介
 k2-compose集成了docker-compose==1.14.0的基础功能，包括
@@ -38,9 +38,8 @@ k2-compose集成了docker-compose==1.14.0的基础功能，包括
 
 安装：
 
-pip install k2-compose
-
-最新版本： sudo pip install k2-compose==0.1.2 -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
+sudo pip install k2-compose==0.17 
+或者 sudo pip install k2-compose==0.1.7 -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
 
 项目地址：[https://github.com/Tsui89/k2-compose](https://github.com/Tsui89/k2-compose)
 
@@ -389,7 +388,9 @@ root@minion1:~/k2-compose-0.0.4rc2/tests# k2-compose -f k2-compose.yml ps
 ```
 
 #### agent
-检查host、container状态以及cpu/memory使用情况，并按Telnet API模式打印在终端上，也可以使用--opentsdb-http参数指定opentsdb服务地址，发送组件监控状态。
+检查host、container状态以及cpu/memory使用情况，并按Telnet API模式打印在终端上，也可以使用--opentsdb-http参数指定opentsdb服务地址，直接发送。
+
+之后会在本地生成dashboard.json，grafana导入这个dashboard.json即可。
 
 [Writing Data to OpenTSDB](http://opentsdb.net/docs/build/html/user_guide/writing.html)
 
