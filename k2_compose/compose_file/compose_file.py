@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 import copy
 import logging
 import os
@@ -220,7 +221,7 @@ class ComposeFile(object):
 
         metric = "%s.%s" % (metric_prefix, HOSTS_METRIC)
         for host in self.hosts:
-            description =self.hosts[host] if self.hosts[host].startswith('unix') else self.hosts[host].rstrip(':')
+            description =self.hosts[host]
             panel = PanelNew(title=host,measurement=metric,
                              value=host,key='host',
                              description=description,
@@ -231,17 +232,26 @@ class ComposeFile(object):
         row_services = Row(title='Services Status')
         row_services.height='90px'
         for service in services:
+            service_detail = self.get_service(service)
+            run_on = service_detail.get('host','default')
             metric = "%s.%s" % (metric_prefix, SERVICES_METRIC)
             panel = PanelNew(title=service,measurement=metric,
-                             value=service,key='service',delay=delay)
+                             value=service,key='service',delay=delay,
+                             description='Runs on %s'%(run_on))
             row_services.add_panel(panel)
         dashboad.add_row(row_services)
 
         for service in services:
             row_service = Row(title='Container '+service)
+
             metric = "%s.%s.%s" % (metric_prefix, CONTAINERS_METRIC, service)
             target = Target(service,metric,type="health_check")
-            panel = Panel(title=service,yaxes_l='ms')
+            description='-20002ms undeployed\n\n' \
+                        '-20001ms stopped\n\n' \
+                        '<0ms error\n\n' \
+                        '\\>=0ms running'
+            panel = Panel(title='Health Check',yaxes_l='none', label_l=u"响应时间 ms",
+                          description=description)
             panel.add_target(target)
             row_service.add_panel(panel)
 
@@ -410,7 +420,7 @@ class ComposeConcrete(ComposeFile):
         table_data = []
         table_data.append(
             ['Service', 'Host', 'Service-Status', 'Image-Status', 'Depends-On',
-             'Ports', 'Network-Mode'])
+             'Ports', 'Network-Mode', 'Stats'])
 
         try:
             default_network = self.stream['networks']['default']['driver']
@@ -443,10 +453,14 @@ class ComposeConcrete(ComposeFile):
             ports = ports.strip('\n')
 
             nm = default_network if container.network_mode == '' else container.network_mode
-
+            stats=''
+            for s in ['cpu:'+str(container.cpu_utilization)+'%'+'\n',
+                      'mem:'+str(container.mem_usage)+'m'+'\n',
+                      'check:'+str(container.exec_time)+'ms']:
+                stats +=s
             table_data.append([container.id, Color(host_color),
                                Color(container_color), image_status,
-                               depends, ports, nm])
+                               depends, ports, nm, stats])
 
         table_instance = AsciiTable(table_data)
 

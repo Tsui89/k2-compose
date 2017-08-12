@@ -51,11 +51,13 @@ class Target(object):
 
 
 class PanelBase(object):
-    def __init__(self, title=None, yaxes_l="short", yaxes_r="short"):
+    def __init__(self, title=None, yaxes_l="short", yaxes_r="short",label_l=None,
+                 description=None):
         self.__dict__.update(
             {
                 "aliasColors": {},
                 "bars": False,
+                'description':description,
                 "datasource": "${DS_INFLUXPROD}",
                 "editable": True,
                 "error": False,
@@ -114,7 +116,7 @@ class PanelBase(object):
                 "yaxes": [
                     {
                         "format": yaxes_l,
-                        "label": None,
+                        "label": label_l,
                         "logBase": 1,
                         "max": None,
                         "min": None,
@@ -239,7 +241,7 @@ class PanelNew(object):
                   ]
                 }
               ],
-              "thresholds": "2,2",
+              "thresholds": "2,2.5",
               "title": title,
               "type": "singlestat",
               "valueFontSize": "50%",
@@ -381,8 +383,9 @@ class Row(RowBase):
 class Panel(PanelBase):
     __refid = 65
 
-    def __init__(self, title=None, yaxes_l='short', yaxes_r='short'):
-        super(Panel,self).__init__(title,yaxes_l,yaxes_r)
+    def __init__(self, title=None, yaxes_l='short', yaxes_r='short',label_l=None,
+                 description=None):
+        super(Panel,self).__init__(title,yaxes_l,yaxes_r,label_l,description)
         self.title = title
 
     def add_target(self, target):

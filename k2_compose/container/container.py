@@ -194,7 +194,6 @@ class Container(ComposeService):
         self.mem_limit = round(float(mem_limit * 1.0 / 1024 / 1024),2) #MB
         self.mem_usage = round(float(mem_usage * 1.0 / 1024 / 1024),2) #MB
 
-
     def ps_container(self):
         if not self.check_client('In ps container'):
             return
