@@ -432,3 +432,8 @@ End
 ```
 
 ### Troubleshooting
+
+> 如果显示Connect Error,解决方法：
+>> 1. 检查docker daemon启动参数有没有加-H tcp://0.0.0.0:4243 -H unix:///var/run/docker.sock
+>> 2. 执行docker version检查api version。然后使用DOCKER_API_VERSION=<api version> k2-compose xxx
+
