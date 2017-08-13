@@ -220,7 +220,7 @@ class ComposeFile(object):
         row_hosts.height='90px'
 
         metric = "%s.%s" % (metric_prefix, HOSTS_METRIC)
-        for host in self.hosts:
+        for host in sorted(self.hosts.keys()):
             description =self.hosts[host]
             panel = PanelNew(title=host,measurement=metric,
                              value=host,key='host',
