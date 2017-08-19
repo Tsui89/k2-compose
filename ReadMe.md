@@ -1,5 +1,5 @@
 
-#### 最新版本0.1.7
+#### 最新版本0.1.7rc2
 
 #### 简介
 k2-compose集成了docker-compose==1.14.0的基础功能，包括
@@ -38,8 +38,11 @@ k2-compose集成了docker-compose==1.14.0的基础功能，包括
 
 安装：
 
-sudo pip install k2-compose==0.1.7 
-或者 sudo pip install k2-compose==0.1.7 -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
+sudo pip install k2-compose==0.1.7rc2 
+
+或者使用国内豆瓣镜像源
+
+sudo pip install k2-compose==0.1.7rc2 -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
 
 项目地址：[https://github.com/Tsui89/k2-compose](https://github.com/Tsui89/k2-compose)
 
