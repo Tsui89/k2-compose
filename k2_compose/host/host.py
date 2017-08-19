@@ -14,14 +14,18 @@ def host_connect(host_instance=None):
     if not isinstance(host_instance, Host):
         return
     if is_open(host_instance.metadata['dockerHost']):
-        try:
-            result = host_instance.client.ping()
-        except Exception as e:
-            logging.error('[%s: %s] connect error.' % (
-                host_instance.id, host_instance.metadata['dockerHost']))
-        else:
+        for i in range(3):
+            try:
+                result = host_instance.client.ping()
+            except Exception as e:
+                continue
             if result:
                 host_instance.status_code = HOST_CONNECT
+                break
+            else:
+                if i == 2:
+                    logging.error('[%s: %s] connect error.' % (
+                        host_instance.id, host_instance.metadata['dockerHost']))
     else:
         host_instance.status_code = HOST_DISCONNECT
     host_instance.status = HOST_STATUS[host_instance.status_code]
@@ -32,22 +36,29 @@ def is_open(docker_host):
     if docker_host.startswith("unix://"):
         docker_host=docker_host.replace('unix://', '')
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        try:
-            s.connect(docker_host)
-            s.shutdown(2)
-            return True
-        except Exception as e:
-            return False
+        for i in range(3):
+            try:
+                s.connect(docker_host)
+                s.shutdown(2)
+            except Exception as e:
+                if i == 2:
+                    return False
+                continue
+            else:
+                return True
     else:
         host_ip, host_port = docker_host.split(':')
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            s.connect((host_ip, int(host_port)))
-            s.shutdown(2)
-            return True
-        except Exception:
-            return False
-
+        for i in range(3):
+            try:
+                s.connect((host_ip, int(host_port)))
+                s.shutdown(2)
+            except Exception:
+                if i == 2:
+                    return False
+                continue
+            else:
+                return True
 
 class Host(Node):
     def __init__(self, id, dockerhost='', status_code=HOST_DISCONNECT):
