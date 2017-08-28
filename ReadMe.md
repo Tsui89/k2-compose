@@ -38,7 +38,7 @@ k2-compose集成了docker-compose==1.14.0的基础功能，包括
 
 安装：
 
-sudo pip install k2-compose==0.1.7rc2 
+sudo pip install k2-compose==0.1.7rc2
 
 或者使用国内豆瓣镜像源
 
@@ -105,6 +105,7 @@ health_check中shell/http二选一。
 ### 操作示例
 注
 
+1. docker daemon需要对外暴露服务，添加启动参数 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:4243
 1. 以下k2-compose.yml就是“k2-compose文件示例”的内容。
 2. 以下所有的命令（除了rm、logs、bash外）都可以接受具体的service名称，也可以缺省，默认是所有的service,如：k2-compose ps busybox1。
 3. 同时service支持正则匹配，如：k2-compose ps busybox\* 等价于k2-compose ps busybox1 busybox2
@@ -439,4 +440,3 @@ End
 > 如果显示Connect Error,解决方法：
 >> 1. 检查docker daemon启动参数有没有加-H tcp://0.0.0.0:4243 -H unix:///var/run/docker.sock
 >> 2. 执行docker version检查api version。然后使用DOCKER_API_VERSION=\<api version\> k2-compose xxx
-
