@@ -42,7 +42,7 @@ sudo pip install k2-compose==0.1.7rc2
 
 或者使用国内豆瓣镜像源
 
-sudo pip install k2-compose==0.1.7rc2 -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
+sudo pip install k2-compose==0.1.7rc2 -i http://pypi.douban.com/simple \-\-trusted-host pypi.douban.com
 
 项目地址：[https://github.com/Tsui89/k2-compose](https://github.com/Tsui89/k2-compose)
 
