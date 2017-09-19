@@ -129,11 +129,15 @@ class Container(ComposeService):
         self.project = project
         self.exec_time = HEALTH_CHECK_EXEC_TIME_UNDEPLOYED
         self.docker_compose_file = docker_compose_file
-        self.containerid = self.project + '_' + self.id + \
+        self.containerid = self.container_name if self.container_name else self.project + '_' + self.id + \
                            DOCKER_PROJECT_SUFFIX
 
-        self.base_cmd = 'docker-compose -f %s -p %s ' % (
-            self.docker_compose_file, self.project)
+        if self.container_name:
+            self.base_cmd = 'docker-compose -f %s ' % (
+                self.docker_compose_file)
+        else:
+            self.base_cmd = 'docker-compose -f %s -p %s ' % (
+                self.docker_compose_file, self.project)
 
         self.help_context = "\n"
         self.mem_limit = 0

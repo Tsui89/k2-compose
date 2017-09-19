@@ -52,6 +52,10 @@ class ComposeService(Node):
     def network_mode(self):
         return self._service.get('network_mode','')
 
+    @cached_property
+    def container_name(self):
+        return self._service.get('container_name','')
+
     def show(self):
         table_data = []
         keys = self._service.keys()
