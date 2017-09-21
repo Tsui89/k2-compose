@@ -45,10 +45,9 @@ setup(name="k2-compose",
       author_email='wch.c@qq.com',
       url='https://github.com/Tsui89/k2-compose',
       install_requires=[
-          # 'colorama>=0.3.7',
-          'docker-compose==1.14.0',
-          'colorclass==2.2.0',
-          'terminaltables==3.0.0',
+          'docker-compose',
+          'colorclass',
+          'terminaltables',
           'pick',
           'pytz'
       ],
