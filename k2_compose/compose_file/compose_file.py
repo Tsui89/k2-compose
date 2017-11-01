@@ -231,7 +231,7 @@ class ComposeFile(object):
         dashboad.add_row(row_hosts)
         row_services = Row(title='Services Status')
         row_services.height='90px'
-        for service in services:
+        for service in sorted(services):
             service_detail = self.get_service(service)
             run_on = service_detail.get('host','default')
             metric = "%s.%s" % (metric_prefix, SERVICES_METRIC)
@@ -241,7 +241,7 @@ class ComposeFile(object):
             row_services.add_panel(panel)
         dashboad.add_row(row_services)
 
-        for service in services:
+        for service in sorted(services):
             row_service = Row(title='Container '+service)
 
             metric = "%s.%s.%s" % (metric_prefix, CONTAINERS_METRIC, service)
