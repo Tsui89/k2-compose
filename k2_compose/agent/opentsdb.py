@@ -8,7 +8,7 @@ import json
 class OpenTSDB_Sender(object):
     def __init__(self, server):
         self.server = server
-        self.url = "http://%s/api/put" % server
+        self.url = "http://%s/api/put" % server if not server.startswith('http://') else "%s/api/put"
         self.session = requests.Session()
 
     def send(self, lines):
