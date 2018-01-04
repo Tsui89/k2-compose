@@ -486,7 +486,7 @@ class Cmdline:
         )
         parser.add_argument(
             '--opentsdb-http',
-            help='opentsdb server http api, eg: 106.120.241.178:4242'
+            help='opentsdb server http api, eg: 127.0.0.1:4242'
         )
         parser.add_argument(
             '--delay',
